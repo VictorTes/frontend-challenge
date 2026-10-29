@@ -123,7 +123,7 @@ function CartRow({ item, issues }: { item: CartItem; issues: QuoteIssue[] }) {
           <p className="mt-1.5 text-sm leading-4 text-muted-foreground">
             Edição: {item.editionName}
           </p>
-          <div className="mt-auto flex items-end justify-between pr-4">
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-1 pr-4">
             <p className="text-lg leading-4 font-bold text-highlight">
               <span className="sr-only">Total do item: </span>
               {formatEth(mulEth(item.unitPriceEth, quantity))}
@@ -257,7 +257,7 @@ export function CartPage() {
 
       {isPending ? (
         <div
-          className="grid gap-8 lg:grid-cols-[1fr_332px]"
+          className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_332px]"
           aria-busy="true"
           aria-label="Carregando carrinho"
         >
@@ -289,7 +289,7 @@ export function CartPage() {
           }
         />
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,782px)_332px] lg:justify-between lg:gap-0">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,782px)_332px] lg:justify-between lg:gap-0">
           <section aria-label="Itens do carrinho">
             <div
               className="hidden grid-cols-[minmax(0,311fr)_minmax(0,139fr)_minmax(0,136fr)_minmax(0,148fr)_24px] border-b border-primary/30 pr-6 pb-3 text-base leading-4 font-bold md:grid"

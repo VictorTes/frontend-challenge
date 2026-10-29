@@ -39,7 +39,7 @@ export function QuoteTotals({
         </dd>
       </div>
       <div className="flex items-center justify-between gap-4">
-        <dt className="whitespace-nowrap">
+        <dt className="min-w-0 sm:whitespace-nowrap">
           Desconto do lançamento
           {quote.coupon && <span className="ml-1 text-xs text-highlight">({quote.coupon.code} −{quote.coupon.percentOff}%)</span>}
         </dt>

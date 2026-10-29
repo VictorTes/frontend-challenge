@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, NFT, test } from './support/fixtures'
+import { addToCart } from './support/flows'
 
 test.describe('Acessibilidade', () => {
   for (const path of ['/', `/nfts/${NFT.emerald.id}`, '/cart', '/login', '/register']) {
@@ -11,6 +12,19 @@ test.describe('Acessibilidade', () => {
       expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
     })
   }
+
+  test('zoom de 400% (320px): sem rolagem horizontal nem conteúdo cortado', async ({ page, open }) => {
+    await page.setViewportSize({ width: 320, height: 720 })
+    const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    for (const path of ['/', `/nfts/${NFT.emerald.id}`, '/login', '/register']) {
+      await open(path)
+      await page.waitForLoadState('networkidle')
+      expect(await overflow(), path).toBe(0)
+    }
+    await addToCart(page, NFT.emerald.id)
+    await expect(page.getByTestId('quote-total')).toBeVisible()
+    expect(await overflow(), '/cart').toBe(0)
+  })
 
   test('link de pular conteúdo e navegação por teclado', async ({ page, open }) => {
     await open('/')
