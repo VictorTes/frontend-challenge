@@ -506,6 +506,31 @@ export function CheckoutPage() {
             )}
           </fieldset>
 
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-2 text-base font-bold">Conectar com</legend>
+            {walletProviders.map((provider) => (
+              <label
+                key={provider}
+                className={cn(
+                  'flex cursor-pointer items-center gap-4 rounded-2xl border bg-card px-4 py-3 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring md:rounded-none',
+                  draft.provider === provider ? 'border-foreground' : 'border-border hover:border-primary',
+                )}
+              >
+                <span aria-hidden className="flex size-10 items-center justify-center rounded-full border border-border font-bold text-highlight">
+                  {providerLabels[provider][0]}
+                </span>
+                <span className="flex-1">{providerLabels[provider]}</span>
+                <input
+                  type="radio"
+                  name="provider"
+                  className="size-4 accent-[var(--primary)]"
+                  checked={draft.provider === provider}
+                  onChange={() => update('provider', provider)}
+                />
+              </label>
+            ))}
+          </fieldset>
+
           <p className="flex justify-between text-lg font-bold md:hidden">
             Total: <span className="text-highlight">{liveQuote ? formatEth(liveQuote.totalEth) : '—'}</span>
           </p>
