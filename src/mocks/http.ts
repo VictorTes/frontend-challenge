@@ -61,19 +61,19 @@ export type AuthResult = { user: UserRecord; token: string } | { response: Respo
 /** Resolves the session user or a 401 (missing/invalid vs expired). */
 export function authenticate(request: Request): AuthResult {
   const token = bearer(request)
-  if (!token) return { response: apiError(401, 'UNAUTHENTICATED', 'Sign in to continue.') }
+  if (!token) return { response: apiError(401, 'UNAUTHENTICATED', 'Entre na sua conta para continuar.') }
   const state = db()
   const session = state.sessions.find((s) => s.token === token)
   if (!session) {
-    return { response: apiError(401, 'UNAUTHENTICATED', 'Your session is no longer valid.') }
+    return { response: apiError(401, 'UNAUTHENTICATED', 'Sua sessão não é mais válida. Entre novamente.') }
   }
   if (Date.parse(session.expiresAt) <= Date.now()) {
     state.sessions = state.sessions.filter((s) => s.token !== token)
     persist()
-    return { response: apiError(401, 'SESSION_EXPIRED', 'Your session has expired. Sign in again.') }
+    return { response: apiError(401, 'SESSION_EXPIRED', 'Sua sessão expirou. Entre novamente.') }
   }
   const user = state.users.find((u) => u.id === session.userId)
-  if (!user) return { response: apiError(401, 'UNAUTHENTICATED', 'Account not found.') }
+  if (!user) return { response: apiError(401, 'UNAUTHENTICATED', 'Conta não encontrada.') }
   return { user, token }
 }
 
