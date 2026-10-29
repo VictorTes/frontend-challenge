@@ -51,6 +51,8 @@ test.describe('Compra', () => {
     await addToCart(page, NFT.emerald.id)
     await page.goto('/checkout')
     await page.getByLabel('Observação do colecionador (opcional)').fill('Entregar na carteira principal')
+    // Expire only after the quote loaded, so the 401 comes from the confirmation step.
+    await expect(page.getByTestId('quote-total')).toHaveText(/ETH$/)
     await mock.expireSessions()
     await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
     await page.getByRole('dialog').getByRole('button', { name: /^Conectar / }).click()
