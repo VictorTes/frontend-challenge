@@ -127,18 +127,24 @@ Envelope comum:
 | Catálogo | `['catalog', params]` | 30s | `keepPreviousData`, AbortSignal, patch via socket |
 | Destaques / relacionados | `['featured']`, `['related', id]` | 60s | patch via socket |
 | Detalhe | `['nft', id]` | 30s | prefetch no loader da rota (sem bloquear a navegação) |
-| Carrinho | `['cart', owner]` | 10s | resposta da mutation vira o cache |
+| Carrinho | `['cart', owner]` | 10s | resposta da mutation vira o cache, exceto se for de versão menor que a do cache (respostas fora de ordem); quantidade otimista com debounce de 350ms |
 | Cotação | `['me', owner, 'quote', network, cartVersion]` | 60s | invalidada por eventos e mutations |
-| Favoritos | `['me', userId, 'favorites']` | 30s | otimista com rollback |
+| Favoritos | `['me', userId, 'favorites']` | 30s | otimista com rollback; refetch só quando o último toggle em voo termina |
 | Pedido | `['me', userId, 'order', id]` | 30s | evento + polling de 5s enquanto pendente |
 | Perfil / carteiras | `['me', userId, 'profile' \| 'wallets']` | 30s | `setQueryData` após salvar |
 
 Retries: 1 automático, só para falhas transitórias. Mutations não são repetidas automaticamente.
 
+### Intertravamento de ações
+
+- **Envio único:** `disabled={mutation.isPending}` não basta, porque o TanStack Query publica o estado pendente no tick seguinte e um duplo clique passa. `useSingleFlight` e `useLockedSubmit` (`src/shared/hooks/use-locked-submit.ts`) aplicam uma trava síncrona (`useRef`) em login, cadastro, perfil, carteiras, cupom, comprar, adição rápida, remoção, conexão de carteira e aceite de preços. O pedido tem trava própria e chave de idempotência.
+- **Quantidade no carrinho:** cada clique altera o número na hora e é aplicado como delta sobre o último valor pedido (cliques no mesmo tick não se perdem). Um único PATCH sai 350ms depois do último clique, e uma alteração pendente é enviada se a linha desmontar. O total oficial continua vindo da cotação do servidor.
+- **Respostas fora de ordem:** mutations do carrinho devolvem o carrinho com `version`, e uma resposta mais antiga que o cache é descartada.
+
 ## Decisões de UX
 
 - O catálogo reinicia a página ao mudar filtro, aba ou busca. Chips de filtros ativos têm remoção individual e "Limpar filtros".
-- No mobile, os filtros abrem em um Sheet lateral, e o detalhe tem uma barra fixa de compra (quantidade, preço, comprar e adicionar).
+- No mobile, os filtros abrem em um Sheet lateral, e o detalhe tem uma barra de compra `sticky` (quantidade, preço, comprar e adicionar).
 - "COMPRAR" adiciona ao carrinho e leva ao carrinho; o ícone de carrinho (mobile e cards) só adiciona.
 - **Pagamento:** o formulário leva a "Revisar e confirmar compra", que abre um diálogo de revisão. Nele o usuário conecta a carteira (aprovação simulada), pode desconectar e confirma. Mudanças de valores mostram o diff e exigem aceite.
 - A confirmação usa o layout do frame "Confirmação de Pedido", como página (rota `/orders/:id`) e não como modal, para suportar acesso direto e refresh.

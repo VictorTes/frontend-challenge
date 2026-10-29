@@ -132,18 +132,18 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `catalog.spec.ts` | 1: busca, filtros combinados, ordenação, paginação, refresh e histórico; vazio; fora de ordem; links do rodapé (reais x fora do escopo) |
 | `nft-detail.spec.ts` | 2: acesso direto, NFT e rota inexistentes, edição esgotada, limite de quantidade |
 | `auth.spec.ts` | 3: cadastro (validação e conflito), login com retorno, refresh, expiração, logout e troca de usuário |
-| `favorites.spec.ts` | 4: persistência, falha da mutation com rollback e recuperação |
-| `cart.spec.ts` | 5: quantidades, remoção, resumo, cupons, refresh, merge no login, estoque |
+| `favorites.spec.ts` | 4: persistência, falha da mutation com rollback e recuperação, cliques seguidos terminam no último estado |
+| `cart.spec.ts` | 5: quantidades, remoção, resumo, cupons, refresh, merge no login, estoque; cliques rápidos (um único PATCH) e duplo clique em comprar e remover |
 | `purchase.spec.ts` | 6: compra completa até o recibo (snapshot); validação; sessão expirada no checkout |
 | `payment-failures.spec.ts` | 7: recusa, clique repetido, timeout com recuperação idempotente, carteira recusada |
 | `account.spec.ts` | 8: perfil, avatar, senha e carteiras com erros de validação |
 | `realtime.spec.ts` | 9 e 10: preço muda no carrinho e no checkout, 409 no envio, duplicados e antigos, reconexão, pedido pendente |
-| `a11y.spec.ts` | 11: axe (WCAG 2.1 AA, sem violações graves), teclado, abas com setas (WAI-ARIA), foco de diálogos, validação |
-| `loading.spec.ts` | 12: skeletons, erro e nova tentativa, 500, offline |
-| `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável |
+| `a11y.spec.ts` | 11: axe (WCAG 2.1 AA, sem violações graves), teclado, abas com setas (WAI-ARIA), foco de diálogos, validação, zoom de 400% (320px) sem rolagem horizontal |
+| `loading.spec.ts` | 12: skeletons com shimmer (estáticos com movimento reduzido), erro e nova tentativa, 500, offline |
+| `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável, envio repetido (Enter e duplo clique) gera uma requisição |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 96 testes passando (60 desktop + 20 mobile + 16 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 104 testes passando (66 desktop + 21 mobile + 17 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 
