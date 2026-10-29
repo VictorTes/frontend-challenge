@@ -1,4 +1,5 @@
-import { expect, NFT, test, USERS } from './support/fixtures'
+import { addToCart } from './support/flows'
+import { expect, isMobile, NFT, test, USERS } from './support/fixtures'
 
 test.describe('Conta e sessão', () => {
   test('cadastro valida campos, trata conflito e cria a conta @mobile', async ({ page, open }) => {
@@ -63,4 +64,33 @@ test.describe('Conta e sessão', () => {
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('kurio:session') ?? '{}').user.email)
     expect(stored).toBe(USERS.bruno.email)
   })
+
+  test('fechar o login aberto por uma rota privada não o reabre @mobile', async ({ page, open }) => {
+    // From the cart: "Conectar e finalizar" -> /checkout (private) -> login.
+    await open('/')
+    await addToCart(page, NFT.emerald.id)
+    await page.getByRole('button', { name: 'Conectar e finalizar' }).click()
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fcheckout/)
+    const closeLogin = async () => {
+      // Desktop/tablet: the login is a modal with "Fechar". Phones: the mobile
+      // frame is a plain page, left with the browser's back.
+      if (isMobile(page)) await page.goBack()
+      else await page.getByRole('button', { name: 'Fechar' }).click()
+    }
+    await closeLogin()
+    await expect(page).toHaveURL('/cart')
+    // It stays closed (no bounce back to the login).
+    await page.waitForTimeout(800)
+    await expect(page).toHaveURL('/cart')
+
+    // Direct visit to a private page: closing the modal goes home.
+    if (isMobile(page)) return
+    await page.goto('/checkout')
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fcheckout/)
+    await closeLogin()
+    await expect(page).toHaveURL('/')
+    await page.waitForTimeout(800)
+    await expect(page).toHaveURL('/')
+  })
 })
+

@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useSessionRevalidation } from '@/features/auth/hooks'
 import { PendingCartReplay } from '@/features/cart/components/pending-replay'
 import { Footer } from '@/app/layout/footer'
+import { isPrivatePath } from '@/app/private-routes'
 import { Header } from '@/app/layout/header'
 import { MobileNav } from '@/app/layout/mobile-nav'
 import { sessionStore } from '@/shared/session/session-store'
@@ -21,8 +22,6 @@ const MockPanel =
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   component: RootLayout,
 })
-
-const PRIVATE_PREFIXES = ['/checkout', '/orders', '/account']
 
 /**
  * When the session expires mid-navigation, private screens send the user to
@@ -39,7 +38,7 @@ function SessionWatcher() {
         toast.warning('Sua sessão expirou. Entre novamente para continuar.', {
           id: 'session-expired',
         })
-        if (PRIVATE_PREFIXES.some((p) => pathname.startsWith(p))) {
+        if (isPrivatePath(pathname)) {
           void router.navigate({
             to: '/login',
             search: { redirect: `${pathname}${searchStr}`, reason: 'expired' },

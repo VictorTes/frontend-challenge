@@ -1,7 +1,8 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { Eye, EyeOff, X } from 'lucide-react'
 import { useId, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import { notAvailable } from '@/app/layout/out-of-scope'
+import { isPrivatePath } from '@/app/private-routes'
 import { CatalogSection } from '@/features/catalog/components/catalog-section'
 import { Hero } from '@/features/catalog/components/home-sections'
 import { ApiError } from '@/shared/api/errors'
@@ -159,8 +160,17 @@ type ShellProps = {
 
 function Shell({ mode, redirect, description, mobileTitle, children }: ShellProps) {
   const navigate = useNavigate()
+  const router = useRouter()
   const isDesktop = useMediaQuery('(min-width: 768px)')
-  const close = () => navigate({ to: safeRedirect(redirect) })
+  // Closing must not reopen the login: a private redirect target (e.g. the
+  // checkout) would bounce straight back here through the auth guard. Go back
+  // to the page the user came from instead, or home on a direct visit.
+  const close = () => {
+    const target = safeRedirect(redirect)
+    if (!isPrivatePath(target)) void navigate({ to: target })
+    else if (router.history.canGoBack()) router.history.back()
+    else void navigate({ to: '/' })
+  }
   const tab = (active: boolean) =>
     cn(
       'text-xl leading-4 font-medium transition',
