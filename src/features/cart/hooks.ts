@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/shared/api/endpoints'
 import { qk } from '@/shared/api/query-keys'
 import type { AddCartItemInput, Cart } from '@/shared/contracts'
-import { useSession } from '@/shared/session/session-store'
+import { sessionStore, useSession } from '@/shared/session/session-store'
 
 export function useCartOwner() {
   return useSession()?.user.id ?? 'guest'
@@ -32,6 +32,9 @@ function useCartMutation<TVariables>(mutationFn: (variables: TVariables) => Prom
   return useMutation({
     mutationFn,
     onSuccess: (cart) => {
+      // A late response from a previous session must not repopulate its
+      // private cart after logout or a user switch.
+      if (owner !== (sessionStore.userId() ?? 'guest')) return
       // Concurrent mutations (two rows at once) may resolve out of order: a
       // response older than the cached cart must not overwrite it.
       queryClient.setQueryData<Cart>(qk.cart(owner), (current) =>

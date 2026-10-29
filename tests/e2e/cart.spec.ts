@@ -2,10 +2,14 @@ import type { Page } from '@playwright/test'
 import { expect, NFT, test, USERS } from './support/fixtures'
 import { addToCart } from './support/flows'
 
-const item = (page: Page, nftId: string) => page.locator(`[data-testid="cart-item"][data-item="${nftId}"]`)
+const item = (page: Page, nftId: string) =>
+  page.locator(`[data-testid="cart-item"][data-item="${nftId}"]`)
 
 test.describe('Carrinho', () => {
-  test('quantidades, remoção, resumo coerente e persistência após refresh @mobile', async ({ page, open }) => {
+  test('quantidades, remoção, resumo coerente e persistência após refresh @mobile', async ({
+    page,
+    open,
+  }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id, 2)
     await addToCart(page, NFT.sage.id)
@@ -15,10 +19,14 @@ test.describe('Carrinho', () => {
     await expect(page.getByTestId('quote-subtotal')).toHaveText('4.07 ETH')
     await expect(page.getByTestId('quote-total')).toHaveText('4.086 ETH')
 
-    await item(page, NFT.sage.id).getByRole('button', { name: `Aumentar quantidade de ${NFT.sage.name}` }).click()
+    await item(page, NFT.sage.id)
+      .getByRole('button', { name: `Aumentar quantidade de ${NFT.sage.name}` })
+      .click()
     await expect(page.getByTestId('quote-subtotal')).toHaveText('5.76 ETH')
 
-    await item(page, NFT.emerald.id).getByRole('button', { name: `Remover ${NFT.emerald.name} do carrinho` }).click()
+    await item(page, NFT.emerald.id)
+      .getByRole('button', { name: `Remover ${NFT.emerald.name} do carrinho` })
+      .click()
     await expect(page.getByTestId('cart-item')).toHaveCount(1)
     await expect(page.getByTestId('quote-subtotal')).toHaveText('3.38 ETH')
 
@@ -27,15 +35,23 @@ test.describe('Carrinho', () => {
     await expect(page.getByTestId('quote-total')).toHaveText('3.396 ETH')
   })
 
-  test('cliques rápidos no + somam todos e enviam uma única alteração @mobile', async ({ page, open }) => {
+  test('cliques rápidos no + somam todos e enviam uma única alteração @mobile', async ({
+    page,
+    open,
+  }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id)
     const patches: number[] = []
     page.on('request', (r) => {
-      if (r.method() === 'PATCH' && r.url().includes('/api/cart/items/')) patches.push(r.postDataJSON().quantity)
+      if (r.method() === 'PATCH' && r.url().includes('/api/cart/items/'))
+        patches.push(r.postDataJSON().quantity)
     })
-    const plus = item(page, NFT.emerald.id).getByRole('button', { name: `Aumentar quantidade de ${NFT.emerald.name}` })
-    const value = item(page, NFT.emerald.id).getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` }).locator('output')
+    const plus = item(page, NFT.emerald.id).getByRole('button', {
+      name: `Aumentar quantidade de ${NFT.emerald.name}`,
+    })
+    const value = item(page, NFT.emerald.id)
+      .getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` })
+      .locator('output')
 
     // Three clicks within a few milliseconds (a real double/triple tap).
     await plus.evaluate((button: HTMLButtonElement) => [0, 1, 2].forEach(() => button.click()))
@@ -52,16 +68,63 @@ test.describe('Carrinho', () => {
   test('duplo clique em comprar e em remover não duplica a operação', async ({ page, open }) => {
     await open(`/nfts/${NFT.emerald.id}`)
     const adds: string[] = []
-    page.on('request', (r) => r.method() === 'POST' && r.url().endsWith('/api/cart/items') && adds.push(r.url()))
+    page.on(
+      'request',
+      (r) => r.method() === 'POST' && r.url().endsWith('/api/cart/items') && adds.push(r.url()),
+    )
     await page.getByRole('button', { name: 'COMPRAR', exact: true }).dblclick()
     await expect(page).toHaveURL('/cart')
-    const value = item(page, NFT.emerald.id).getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` }).locator('output')
+    const value = item(page, NFT.emerald.id)
+      .getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` })
+      .locator('output')
     await expect(value).toHaveText('1')
     expect(adds).toHaveLength(1)
 
-    await item(page, NFT.emerald.id).getByRole('button', { name: `Remover ${NFT.emerald.name} do carrinho` }).dblclick()
+    await item(page, NFT.emerald.id)
+      .getByRole('button', { name: `Remover ${NFT.emerald.name} do carrinho` })
+      .dblclick()
     await expect(page.getByTestId('cart-item')).toHaveCount(0)
     // A second DELETE would 404 and show an error toast.
+    await expect(page.locator('[data-sonner-toast][data-type="error"]')).toHaveCount(0)
+  })
+
+  test('alteração de quantidade pendente não vaza nem falha ao sair da conta', async ({
+    page,
+    login,
+  }) => {
+    await login('alice', '/')
+    await addToCart(page, NFT.emerald.id)
+    const failed: string[] = []
+    page.on(
+      'response',
+      (r) =>
+        r.url().includes('/api/cart') &&
+        r.status() >= 400 &&
+        failed.push(`${r.status()} ${r.url()}`),
+    )
+    // Open the account menu first, then click "+" and "Sair" in the same task:
+    // the logout happens inside the 350ms debounce window.
+    await page.getByRole('banner').getByRole('button', { name: /alice/ }).click()
+    await page.getByRole('menuitem', { name: 'Sair' }).waitFor()
+    await page.evaluate((label) => {
+      Array.from(
+        document.querySelectorAll<HTMLButtonElement>(
+          '[data-testid="cart-item"] button[aria-label]',
+        ),
+      )
+        .find(
+          (b) =>
+            b.offsetParent !== null &&
+            b.getAttribute('aria-label')!.toLowerCase() === label.toLowerCase(),
+        )!
+        .click()
+      Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+        .find((el) => el.textContent?.includes('Sair'))!
+        .click()
+    }, `Aumentar quantidade de ${NFT.emerald.name}`)
+    await expect(page.getByRole('banner').getByRole('link', { name: /Entrar/ })).toBeVisible()
+    await page.waitForTimeout(800)
+    expect(failed).toEqual([])
     await expect(page.locator('[data-sonner-toast][data-type="error"]')).toHaveCount(0)
   })
 
@@ -72,11 +135,15 @@ test.describe('Carrinho', () => {
 
     await coupon.fill('NAOEXISTE')
     await page.getByRole('button', { name: 'Aplicar' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: 'Código promocional inválido.' })).toBeVisible()
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Código promocional inválido.' }),
+    ).toBeVisible()
 
     await coupon.fill('VERAO20')
     await page.getByRole('button', { name: 'Aplicar' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: 'Este código promocional expirou.' })).toBeVisible()
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Este código promocional expirou.' }),
+    ).toBeVisible()
 
     await coupon.fill('KURIO10')
     await page.getByRole('button', { name: 'Aplicar' }).click()
@@ -103,14 +170,20 @@ test.describe('Carrinho', () => {
     await expect(page.getByTestId('cart-item')).toHaveCount(1)
   })
 
-  test('limite de disponibilidade por edição é respeitado no carrinho', async ({ page, open, mock }) => {
+  test('limite de disponibilidade por edição é respeitado no carrinho', async ({
+    page,
+    open,
+    mock,
+  }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id, 3)
     // Stock drops below the quantity in the cart.
     await mock.setEdition(NFT.emerald.id, NFT.emerald.edition1of50, { available: 2 })
     await expect(item(page, NFT.emerald.id)).toContainText('restam apenas 2')
     await expect(page.getByRole('button', { name: 'Conectar e finalizar' })).toBeDisabled()
-    await item(page, NFT.emerald.id).getByRole('button', { name: `Diminuir quantidade de ${NFT.emerald.name}` }).click()
+    await item(page, NFT.emerald.id)
+      .getByRole('button', { name: `Diminuir quantidade de ${NFT.emerald.name}` })
+      .click()
     await expect(page.getByRole('button', { name: 'Conectar e finalizar' })).toBeEnabled()
   })
 })

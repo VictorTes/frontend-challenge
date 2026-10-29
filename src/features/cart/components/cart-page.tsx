@@ -9,6 +9,7 @@ import { EmptyState, ErrorState } from '@/shared/components/feedback'
 import { QuantityStepper } from '@/shared/components/quantity-stepper'
 import type { CartItem, QuoteIssue } from '@/shared/contracts'
 import { compareEth, formatEth, mulEth } from '@/shared/lib/money'
+import { sessionStore } from '@/shared/session/session-store'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useAcknowledgePrices, useCart, useRemoveCartItem, useUpdateCartItem } from '../hooks'
 import { CouponForm, QuoteTotals } from './summary'
@@ -42,10 +43,13 @@ const QUANTITY_DEBOUNCE_MS = 350
 function useQuantityDraft(item: CartItem) {
   const update = useUpdateCartItem()
   const [draft, setDraft] = useState<number | null>(null)
-  const pending = useRef<{ quantity: number; timer: number } | null>(null)
+  const pending = useRef<{ quantity: number; timer: number; owner: string | null } | null>(null)
 
-  const commit = (quantity: number) => {
+  const commit = (quantity: number, owner: string | null) => {
     pending.current = null
+    // The session changed (logout, expiry, other user) before the debounce
+    // fired: that change belonged to the previous cart, drop it.
+    if (owner !== sessionStore.userId()) return
     update.mutate(
       { itemId: item.id, quantity },
       {
@@ -60,9 +64,11 @@ function useQuantityDraft(item: CartItem) {
   const change = (quantity: number) => {
     setDraft(quantity)
     if (pending.current) window.clearTimeout(pending.current.timer)
+    const owner = sessionStore.userId()
     pending.current = {
       quantity,
-      timer: window.setTimeout(() => commit(quantity), QUANTITY_DEBOUNCE_MS),
+      owner,
+      timer: window.setTimeout(() => commit(quantity, owner), QUANTITY_DEBOUNCE_MS),
     }
   }
 
@@ -75,7 +81,7 @@ function useQuantityDraft(item: CartItem) {
     () => () => {
       if (!pending.current) return
       window.clearTimeout(pending.current.timer)
-      commitRef.current(pending.current.quantity)
+      commitRef.current(pending.current.quantity, pending.current.owner)
     },
     [],
   )
