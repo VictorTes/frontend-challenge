@@ -143,7 +143,7 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável, envio repetido (Enter e duplo clique) gera uma requisição |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 104 testes passando (66 desktop + 21 mobile + 17 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 105 testes passando (67 desktop + 21 mobile + 17 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 
@@ -157,12 +157,12 @@ Medianas da última execução (2026-10-29): Lighthouse 13.6.0, HeadlessChrome 1
 
 | Página | Perfil | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Início | mobile | **72** | 100 | 100 | 100 | 4532 ms | 0 | 480 ms |
-| Início | desktop | 99 | 100 | 100 | 100 | 1043 ms | 0.006 | 36 ms |
-| Detalhe | mobile | **78** | 100 | 100 | 100 | 4310 ms | 0 | 309 ms |
-| Detalhe | desktop | 99 | 100 | 100 | 100 | 974 ms | 0 | 0 ms |
+| Início | mobile | **71** | 100 | 100 | 100 | 4658 ms | 0.014 | 493 ms |
+| Início | desktop | 98 | 100 | 100 | 100 | 1070 ms | 0.005 | 36 ms |
+| Detalhe | mobile | **78** | 100 | 100 | 100 | 4479 ms | 0 | 302 ms |
+| Detalhe | desktop | 99 | 100 | 100 | 100 | 990 ms | 0 | 0 ms |
 
-Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (72; execuções 71–72) e detalhe (78; execuções 78–79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica em 99.
+Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (71; execuções entre 69 e 73 ao longo do trabalho) e detalhe (78; execuções 78–79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica entre 98 e 99.
 
 **Causas identificadas** (diagnósticos `bootup-time`, `unused-javascript` e `lcp-breakdown` nos JSONs):
 
