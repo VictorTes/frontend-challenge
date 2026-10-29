@@ -13,7 +13,7 @@ import {
 } from './seed'
 
 const STORAGE_KEY = 'nft-mock:db'
-const SCHEMA_VERSION = 6
+const SCHEMA_VERSION = 9
 
 export interface UserRecord extends User {
   passwordHash: string

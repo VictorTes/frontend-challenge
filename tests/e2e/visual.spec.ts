@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, NFT, test } from './support/fixtures'
+import { expect, isMobile, NFT, test } from './support/fixtures'
 import { addToCart } from './support/flows'
 
 /**
@@ -27,7 +27,9 @@ test.describe('Regressão visual', () => {
   test('detalhe do NFT @mobile', async ({ page, open }) => {
     await open(`/nfts/${NFT.emerald.id}`)
     await expect(page.getByRole('heading', { level: 1, name: NFT.emerald.name })).toBeVisible()
-    await expect(page.getByText('Verdant', { exact: false }).or(page.getByRole('heading', { name: 'Mais desta coleção' })).first()).toBeVisible()
+    // The mobile frame has no related carousel: wait for the buy bar instead.
+    if (isMobile(page)) await expect(page.getByRole('button', { name: 'Comprar NFT', exact: true })).toBeVisible()
+    else await expect(page.getByRole('heading', { name: 'Mais desta coleção' })).toBeVisible()
     await settle(page)
     await expect(page).toHaveScreenshot('detalhe.png', { fullPage: true })
   })
@@ -46,7 +48,9 @@ test.describe('Regressão visual', () => {
     await addToCart(page, NFT.emerald.id, 2)
     await page.goto('/checkout')
     await expect(page.getByTestId('quote-total')).toHaveText('2.396 ETH')
-    await expect(page.getByRole('radio', { name: /Principal/ })).toBeChecked()
+    // Desktop frame picks the wallet in a select; mobile lists it as radios.
+    if (isMobile(page)) await expect(page.getByRole('radio', { name: /Principal/ })).toBeChecked()
+    else await expect(page.getByRole('combobox', { name: /Endereço da carteira/ })).toContainText('Principal')
     await settle(page)
     await expect(page).toHaveScreenshot('pagamento.png', { fullPage: true })
   })

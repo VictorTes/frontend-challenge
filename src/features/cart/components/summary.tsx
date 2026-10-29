@@ -8,7 +8,18 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { useApplyCoupon, useRemoveCoupon } from '../hooks'
 
 /** Subtotal / discount / fee / total, always from the server quote. */
-export function QuoteTotals({ quote, isUpdating, className }: { quote: Quote | undefined; isUpdating?: boolean; className?: string }) {
+export function QuoteTotals({
+  quote,
+  isUpdating,
+  className,
+  divided,
+}: {
+  quote: Quote | undefined
+  isUpdating?: boolean
+  className?: string
+  /** Payment layout: a divider above the total. */
+  divided?: boolean
+}) {
   if (!quote) {
     return (
       <div className={cn('flex flex-col gap-3', className)} aria-busy="true" aria-label="Calculando resumo">
@@ -19,32 +30,33 @@ export function QuoteTotals({ quote, isUpdating, className }: { quote: Quote | u
     )
   }
   return (
-    <dl className={cn('flex flex-col gap-3 transition-opacity', isUpdating && 'opacity-60', className)} aria-busy={isUpdating} data-testid="quote-totals">
-      <div className="flex justify-between gap-4">
+    // Figma: labels 15/20, amounts 18/16, discount 15/20, total 16 bold + 18 bold #e89b55.
+    <dl className={cn('flex flex-col gap-3 text-[15px] leading-5 transition-opacity', isUpdating && 'opacity-60', className)} aria-busy={isUpdating} data-testid="quote-totals">
+      <div className="flex items-center justify-between gap-4">
         <dt>Subtotal</dt>
-        <dd className="text-lg md:text-xl" data-testid="quote-subtotal">
+        <dd className="text-lg leading-4 whitespace-nowrap" data-testid="quote-subtotal">
           {formatEth(quote.subtotalEth)}
         </dd>
       </div>
-      <div className="flex justify-between gap-4">
-        <dt>
+      <div className="flex items-center justify-between gap-4">
+        <dt className="whitespace-nowrap">
           Desconto do lançamento
           {quote.coupon && <span className="ml-1 text-xs text-highlight">({quote.coupon.code} −{quote.coupon.percentOff}%)</span>}
         </dt>
-        <dd data-testid="quote-discount">(-) {formatEth(quote.discountEth)}</dd>
+        <dd className="whitespace-nowrap" data-testid="quote-discount">(-) {formatEth(quote.discountEth)}</dd>
       </div>
       <div className="flex flex-col gap-1">
-        <div className="flex justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <dt>Taxa de rede</dt>
-          <dd className="text-lg md:text-xl" data-testid="quote-fee">
+          <dd className="text-lg leading-4 whitespace-nowrap" data-testid="quote-fee">
             {formatEth(quote.networkFeeEth)}
           </dd>
         </div>
-        <span className="self-end text-xs text-highlight">Taxa estimada</span>
+        <span className="mt-2 self-end text-xs leading-4 text-highlight">Taxa estimada</span>
       </div>
-      <div className="flex justify-between gap-4 border-t border-border pt-4">
-        <dt className="font-bold">Total</dt>
-        <dd className="text-lg font-bold text-highlight md:text-xl" data-testid="quote-total">
+      <div className={cn('flex items-center justify-between gap-4', divided ? 'border-t border-primary/30 pt-3' : 'mt-3')}>
+        <dt className="text-base leading-4 font-bold">Total</dt>
+        <dd className="text-lg leading-4 font-bold whitespace-nowrap text-highlight" data-testid="quote-total">
           {formatEth(quote.totalEth)}
         </dd>
       </div>
@@ -94,10 +106,10 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-2">
-      <label htmlFor="coupon" className="text-sm font-bold">
+      <label htmlFor="coupon" className="text-sm leading-4 font-bold max-md:sr-only">
         Código promocional
       </label>
-      <div className="flex">
+      <div className="flex h-10 overflow-hidden rounded-[3px] border border-primary max-md:h-[50px] max-md:rounded-full max-md:border-[#3f2319] max-md:bg-[#2a1913]">
         <input
           id="coupon"
           value={code}
@@ -105,12 +117,12 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
           placeholder="Digite o código promocional..."
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? 'coupon-error' : undefined}
-          className="h-10 min-w-0 flex-1 rounded-l-[2px] border border-primary bg-transparent px-2 text-sm placeholder:text-subtle aria-invalid:border-destructive"
+          className="min-w-0 flex-1 bg-transparent px-2 text-xs placeholder:text-subtle focus:outline-none aria-invalid:text-destructive max-md:px-4 max-md:text-sm"
         />
         <button
           type="submit"
           disabled={apply.isPending}
-          className="h-10 rounded-r-[2px] bg-primary px-5 font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60"
+          className="w-[102px] bg-primary text-[15px] font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60 max-md:w-[97px] max-md:rounded-full max-md:bg-gradient-to-r max-md:from-highlight max-md:to-primary"
         >
           {apply.isPending ? 'Aplicando…' : 'Aplicar'}
         </button>

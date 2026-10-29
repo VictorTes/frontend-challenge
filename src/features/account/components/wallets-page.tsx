@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { useWallets } from '@/features/checkout/hooks'
 import { ApiError } from '@/shared/api/errors'
 import { ErrorState } from '@/shared/components/feedback'
-import { Field, focusFirstError, issuesToErrors, TextField } from '@/shared/components/form-field'
+import { EnsInput, Field, focusFirstError, issuesToErrors, TextField } from '@/shared/components/form-field'
 import {
   networkLabels,
   networks,
@@ -95,7 +95,7 @@ function WalletForm({
         <Field label="Rede" required error={errors.network}>
           {(a11y) => (
             <Select value={values.network} onValueChange={(v) => setValues((s) => ({ ...s, network: v as Network }))}>
-              <SelectTrigger {...a11y} className="h-10 w-full rounded-[2px] border-input">
+              <SelectTrigger {...a11y} className="h-10 w-full rounded-[3px] border-border">
                 <SelectValue placeholder="Selecione uma rede" />
               </SelectTrigger>
               <SelectContent className="border-border bg-card">
@@ -123,7 +123,7 @@ function WalletForm({
         <Field label="Tipo de carteira" required error={errors.provider}>
           {(a11y) => (
             <Select value={values.provider} onValueChange={(v) => setValues((s) => ({ ...s, provider: v as WalletProvider }))}>
-              <SelectTrigger {...a11y} className="h-10 w-full rounded-[2px] border-input">
+              <SelectTrigger {...a11y} className="h-10 w-full rounded-[3px] border-border">
                 <SelectValue placeholder="Selecione uma carteira" />
               </SelectTrigger>
               <SelectContent className="border-border bg-card">
@@ -136,17 +136,10 @@ function WalletForm({
             </Select>
           )}
         </Field>
-        <TextField label="Código de indicação" value={values.referralCode} onChange={(e) => setValues((v) => ({ ...v, referralCode: e.target.value.toUpperCase() }))} error={errors.referralCode} hint="Opcional" />
+        <TextField label="Código de indicação" value={values.referralCode} onChange={(e) => setValues((v) => ({ ...v, referralCode: e.target.value.toUpperCase() }))} error={errors.referralCode} placeholder="Opcional" />
         <TextField label="E-mail" type="email" required value={values.email} onChange={set('email')} error={errors.email} />
-        <Field label="Nome ENS" error={errors.ensName} hint="Opcional">
-          {(a11y) => (
-            <div className="flex gap-2">
-              <span aria-hidden className="flex h-10 items-center rounded-[2px] border border-input px-3 text-sm">
-                .eth
-              </span>
-              <input {...a11y} value={values.ensName} onChange={set('ensName')} className="h-10 min-w-0 flex-1 rounded-[2px] border border-input bg-transparent px-3 aria-invalid:border-destructive" />
-            </div>
-          )}
+        <Field label="Nome ENS" error={errors.ensName}>
+          {(a11y) => <EnsInput a11y={a11y} value={values.ensName} onChange={(ensName) => setValues((v) => ({ ...v, ensName }))} />}
         </Field>
       </div>
       {formError && (

@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useRelated } from '@/features/catalog/hooks'
-import { NftImage } from '@/shared/components/nft-image'
 import { formatEth } from '@/shared/lib/money'
 import { cn } from '@/shared/lib/utils'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -27,30 +26,40 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
   }
 
   return (
-    <section aria-labelledby={`related-${nftId}`} className="mt-16 md:mt-20">
-      <h2 id={`related-${nftId}`} className="border-b border-border pb-2 text-base font-bold text-highlight">
+    <section aria-labelledby={`related-${nftId}`} className="mt-16 md:mt-24">
+      {/* Figma: 17/16 bold heading, divider at 30%, 219×255 portrait cards, gap 28. */}
+      <h2 id={`related-${nftId}`} className="border-b border-primary/30 pb-3 text-[17px] leading-4 font-bold text-highlight">
         {title}
       </h2>
-      <ul ref={listRef} onScroll={onScroll} className="mt-7 flex snap-x gap-6 overflow-x-auto pb-2 [scrollbar-width:none]">
+      <ul ref={listRef} onScroll={onScroll} className="mt-8 flex snap-x gap-7 overflow-x-auto pb-2 [scrollbar-width:none]">
         {isPending
           ? Array.from({ length: 5 }, (_, i) => (
-              <li key={i} className="w-[180px] shrink-0 md:w-[218px]">
-                <Skeleton className="aspect-[218/254] w-full bg-card" />
+              <li key={i} className="w-[180px] shrink-0 md:w-[219px]">
+                <Skeleton className="aspect-[219/255] w-full bg-card" />
               </li>
             ))
           : data?.items.map((nft) => (
-              <li key={nft.id} className="w-[180px] shrink-0 snap-start md:w-[218px]">
-                <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="group flex flex-col gap-2">
-                  <div className="bg-card p-4">
-                    <NftImage src={nft.imageUrl} alt="" sizes="218px" className="transition group-hover:opacity-90" />
+              <li key={nft.id} className="w-[180px] shrink-0 snap-start md:w-[219px]">
+                <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="group flex flex-col gap-3">
+                  <div className="aspect-[219/255] bg-card px-[14px] pt-1 pb-2">
+                    <img
+                      src={nft.imageUrl}
+                      alt=""
+                      width={190}
+                      height={243}
+                      loading="lazy"
+                      className="size-full rounded-[11px] object-cover transition group-hover:opacity-90"
+                    />
                   </div>
-                  <span className="group-hover:text-highlight">{nft.name}</span>
-                  <span className="font-bold text-highlight">{formatEth(nft.priceEth)}</span>
+                  <span className="flex flex-col">
+                    <span className="text-[15px] leading-5 group-hover:text-highlight">{nft.name}</span>
+                    <span className="text-base leading-4 font-bold text-highlight">{formatEth(nft.priceEth)}</span>
+                  </span>
                 </Link>
               </li>
             ))}
       </ul>
-      <div className="mt-4 hidden justify-center md:flex">
+      <div className="mt-8 hidden justify-center md:flex">
         {Array.from({ length: PAGES }, (_, i) => (
           <button
             key={i}
@@ -58,9 +67,9 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
             aria-label={`Ir para o grupo ${i + 1}`}
             aria-pressed={page === i}
             onClick={() => goTo(i)}
-            className="flex size-6 items-center justify-center"
+            className="-mx-0.5 flex size-6 items-center justify-center"
           >
-            <span className={cn('size-3 rounded-full border border-highlight', page === i && 'bg-highlight')} />
+            <span className={cn('size-3 rounded-full border-[1.3px] border-primary', page === i && 'bg-primary')} />
           </button>
         ))}
       </div>

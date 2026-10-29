@@ -3,7 +3,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { ApiError } from '@/shared/api/errors'
 import { ErrorState } from '@/shared/components/feedback'
-import { Field, focusFirstError, issuesToErrors, PasswordField, TextField } from '@/shared/components/form-field'
+import { EnsInput, Field, focusFirstError, issuesToErrors, PasswordField, TextField } from '@/shared/components/form-field'
 import { MAX_AVATAR_BYTES, passwordChangeInput, profileInput, type ProfileInput, type User } from '@/shared/contracts'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useChangePassword, useProfile, useUpdateAvatar, useUpdateProfile } from '../hooks'
@@ -74,7 +74,7 @@ function AvatarEditor({ user }: { user: User }) {
         {user.avatarUrl ? (
           <img src={user.avatarUrl} alt="Avatar atual" width={50} height={50} className="size-[50px] rounded-full object-cover" data-testid="avatar-image" />
         ) : (
-          <span className="flex size-[50px] items-center justify-center rounded-full border border-primary bg-accent text-highlight" aria-label="Sem avatar">
+          <span className="flex size-[50px] items-center justify-center rounded-full border border-border bg-[#2f1d15] text-highlight" aria-label="Sem avatar">
             <ImageIcon aria-hidden className="size-5" />
           </span>
         )}
@@ -83,15 +83,13 @@ function AvatarEditor({ user }: { user: User }) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={updateAvatar.isPending}
-          className="h-10 rounded-[2px] bg-primary px-6 text-sm font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60"
+          className="h-10 w-[98px] rounded-[3px] bg-primary text-sm font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60"
         >
           {updateAvatar.isPending ? 'Enviando…' : 'Alterar'}
         </button>
-        {user.avatarUrl && (
-          <button type="button" onClick={remove} disabled={updateAvatar.isPending} className="text-sm hover:text-highlight">
-            Remover
-          </button>
-        )}
+        <button type="button" onClick={remove} disabled={updateAvatar.isPending || !user.avatarUrl} className="text-sm hover:text-highlight disabled:cursor-not-allowed disabled:opacity-50">
+          Remover
+        </button>
       </div>
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -167,15 +165,8 @@ function ProfileForm({ user }: { user: User }) {
         <TextField label="Nome de exibição" required value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
         <TextField label="Nome de usuário" required value={values.username} onChange={set('username')} error={errors.username} autoComplete="username" />
         <TextField label="E-mail" type="email" required value={values.email} onChange={set('email')} error={errors.email} autoComplete="email" />
-        <Field label="Nome ENS" error={errors.ensName} hint="Opcional. Letras minúsculas, números ou hífen.">
-          {(a11y) => (
-            <div className="flex gap-2">
-              <span aria-hidden className="flex h-10 items-center rounded-[2px] border border-input px-3 text-sm">
-                .eth
-              </span>
-              <input {...a11y} value={values.ensName} onChange={set('ensName')} className="h-10 min-w-0 flex-1 rounded-[2px] border border-input bg-transparent px-3 aria-invalid:border-destructive" />
-            </div>
-          )}
+        <Field label="Nome ENS" error={errors.ensName}>
+          {(a11y) => <EnsInput a11y={a11y} value={values.ensName} onChange={(ensName) => setValues((v) => ({ ...v, ensName }))} />}
         </Field>
         <TextField label="Apelido da carteira" required value={values.walletNickname} onChange={set('walletNickname')} error={errors.walletNickname} />
         <AvatarEditor user={user} />
@@ -184,7 +175,7 @@ function ProfileForm({ user }: { user: User }) {
       <fieldset className="flex max-w-[417px] flex-col gap-5">
         <legend className="mb-4 text-base font-bold">Alterar senha</legend>
         <PasswordField label="Senha atual" autoComplete="current-password" value={passwords.currentPassword} onChange={setPw('currentPassword')} error={errors.currentPassword} />
-        <PasswordField label="Nova senha" autoComplete="new-password" value={passwords.newPassword} onChange={setPw('newPassword')} error={errors.newPassword} hint="Mínimo de 8 caracteres, com letras e números" />
+        <PasswordField label="Nova senha" autoComplete="new-password" value={passwords.newPassword} onChange={setPw('newPassword')} error={errors.newPassword} placeholder="Mínimo de 8 caracteres, com letras e números" />
         <PasswordField label="Confirmar nova senha" autoComplete="new-password" value={passwords.confirm} onChange={setPw('confirm')} error={errors.confirm} />
       </fieldset>
 

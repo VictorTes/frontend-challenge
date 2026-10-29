@@ -48,15 +48,16 @@ function FacetList<T extends string>({
   boldCount?: boolean
 }) {
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-3 text-lg font-bold">{legend}</legend>
+    <fieldset className={cn('flex flex-col', boldCount ? 'px-3' : 'pl-3')}>
+      {/* Figma: 18/16 bold title, 12px gap, 40px rows of 15px text. */}
+      <legend className="-ml-3 mb-3 text-lg leading-4 font-bold">{legend}</legend>
       {values.map((value) => {
         const checked = selected?.includes(value) ?? false
         return (
           <label
             key={value}
             className={cn(
-              'flex cursor-pointer items-center justify-between rounded px-3 py-1.5 text-[15px] transition hover:bg-accent/60 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
+              'flex h-10 cursor-pointer items-center justify-between rounded text-[15px] leading-10 transition hover:text-highlight has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
               checked ? 'text-highlight' : 'text-muted-foreground',
             )}
           >
@@ -88,7 +89,7 @@ function PriceRange({
   const [range, setRange] = useState<[number, number]>(initial)
   return (
     <div className="flex flex-col gap-3">
-      <h3 id={`${idPrefix}-price`} className="text-lg font-bold">
+      <h3 id={`${idPrefix}-price`} className="text-lg leading-4 font-bold">
         Faixa de preço
       </h3>
       <Slider
@@ -100,15 +101,15 @@ function PriceRange({
         value={range}
         onValueChange={(value) => setRange([value[0] ?? minBound, value[1] ?? maxBound])}
         thumbLabels={['Preço mínimo', 'Preço máximo']}
-        className="px-1"
+        className="ml-3 h-[21px] w-[calc(100%-12px)]"
       />
-      <p className="text-[15px]" aria-live="polite">
+      <p className="pl-3 text-[15px] leading-5" aria-live="polite">
         Preço: {formatCenti(range[0])} - {formatCenti(range[1])} ETH
       </p>
       <button
         type="button"
         onClick={() => onApply(range)}
-        className="self-start rounded-[4px] bg-primary px-3 py-1 font-bold text-primary-foreground hover:bg-highlight"
+        className="ml-3 flex h-9 w-[92px] items-center justify-center self-start rounded-[6px] bg-primary text-base leading-5 font-bold text-primary-foreground hover:bg-highlight"
       >
         Aplicar
       </button>
@@ -128,7 +129,7 @@ export function CatalogFilters({ search, facets, onChange, idPrefix }: Props) {
   const networkCounts = new Map((facets?.network ?? []).map((f) => [f.value, f.count]))
 
   return (
-    <div className="flex flex-col gap-8 bg-card px-4 py-5">
+    <div className="flex flex-col gap-10 bg-card p-5">
       <FacetList<CollectionSlug>
         legend="Coleções"
         values={collections}

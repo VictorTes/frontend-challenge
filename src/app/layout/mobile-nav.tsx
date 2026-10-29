@@ -13,6 +13,10 @@ export function MobileNav() {
   const count = useCartCount()
   const [searchOpen, setSearchOpen] = useState(false)
   const searchButton = useRef<HTMLButtonElement>(null)
+  // Like the mobile frames: detail, cart, payment and auth screens have their own
+  // back button / bottom bar instead of the tab bar.
+  const hidden = ['/nfts/', '/cart', '/checkout', '/login', '/register'].some((p) => pathname.startsWith(p))
+  if (hidden) return null
   const item = (active: boolean) =>
     cn('flex size-12 items-center justify-center rounded-full', active ? 'text-highlight' : 'text-muted-foreground')
 

@@ -22,7 +22,7 @@ const MARKET_PATHS = ['/nfts', '/cart', '/checkout', '/orders']
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn('text-sm font-bold tracking-[0.12em] text-foreground', className)} aria-label="Kurio, página inicial">
+    <Link to="/" className={cn('mt-2 text-sm leading-[18px] font-bold tracking-[0.1em] text-foreground', className)} aria-label="Kurio, página inicial">
       KURIO
     </Link>
   )
@@ -30,8 +30,9 @@ export function Logo({ className }: { className?: string }) {
 
 function NavItem({ label, active, to, onClick }: { label: string; active?: boolean; to?: string; onClick?: () => void }) {
   const className = cn(
-    'relative py-2 text-base transition-colors hover:text-highlight',
-    active ? 'font-bold text-highlight after:absolute after:inset-x-0 after:-bottom-[14px] after:h-0.5 after:bg-highlight' : 'text-foreground',
+    // Figma: 16/21, active bold #e89b55 with a 3px #d28a4c underline on the header divider.
+    'relative h-[45px] text-base leading-[21px] transition-colors hover:text-highlight',
+    active ? 'font-bold text-highlight after:absolute after:inset-x-0 after:bottom-[-1.5px] after:h-[3px] after:bg-primary' : 'text-foreground',
   )
   if (to) {
     return (
@@ -41,7 +42,7 @@ function NavItem({ label, active, to, onClick }: { label: string; active?: boole
     )
   }
   return (
-    <button type="button" className={className} onClick={onClick}>
+    <button type="button" className={cn(className, 'flex items-start')} onClick={onClick}>
       {label}
     </button>
   )
@@ -115,31 +116,32 @@ export function Header() {
   const isMarket = MARKET_PATHS.some((p) => pathname.startsWith(p))
 
   return (
-    <header className="hidden md:block">
-      <div className="container-page flex h-[68px] items-center justify-between border-b border-border">
+    <header className="hidden pt-6 md:block">
+      {/* Figma: nav starts 376px into the 1200px container; actions are right-aligned. */}
+      <div className="container-page flex h-[45px] items-start justify-between border-b border-primary/30 lg:grid lg:grid-cols-[376px_1fr_auto]">
         <Logo />
-        <nav aria-label="Principal" className="flex items-center gap-9">
+        <nav aria-label="Principal" className="flex items-start gap-10">
           <NavItem label="Início" to="/" active={pathname === '/'} />
           <NavItem label="Mercado" to="/" active={isMarket} />
           <NavItem label="Criadores" onClick={() => notAvailable('A página de criadores')} />
           <NavItem label="Aprenda" onClick={() => notAvailable('A área editorial')} />
         </nav>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-7">
           <ConnectionBadge />
-          <button ref={searchButton} type="button" aria-label="Buscar" onClick={() => setSearchOpen(true)} className="rounded p-1 hover:text-highlight">
-            <Search aria-hidden className="size-6" />
+          <button ref={searchButton} type="button" aria-label="Buscar" onClick={() => setSearchOpen(true)} className="mt-[8px] rounded hover:text-highlight">
+            <Search aria-hidden className="size-5" strokeWidth={2.2} />
           </button>
-          <Link to="/cart" aria-label={`Carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`} className="relative rounded p-1 hover:text-highlight">
-            <ShoppingCart aria-hidden className="size-6" />
+          <Link to="/cart" aria-label={`Carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`} className="relative mt-[6px] rounded hover:text-highlight">
+            <ShoppingCart aria-hidden className="size-6" strokeWidth={1.8} />
             {cartCount > 0 && (
-              <span aria-hidden className="absolute -top-1 -right-2 flex size-[18px] items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+              <span aria-hidden className="absolute -top-0 -right-[7px] flex size-4 items-center justify-center rounded-full border-2 border-background bg-primary text-[10px] leading-[13px] font-medium text-primary-foreground">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
           </Link>
           {session ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 rounded-[4px] border border-primary px-3 py-1.5 text-highlight hover:bg-primary/10">
+              <DropdownMenuTrigger className="flex h-[35px] items-center gap-2 rounded-[6px] border border-primary px-3 text-highlight hover:bg-primary/10">
                 {session.user.avatarUrl ? (
                   <img src={session.user.avatarUrl} alt="" className="size-6 rounded-full object-cover" />
                 ) : (
@@ -173,7 +175,7 @@ export function Header() {
             <Link
               to="/login"
               search={{ redirect: pathname === '/login' ? undefined : pathname }}
-              className="flex items-center gap-1.5 rounded-[4px] bg-primary px-3 py-1.5 font-medium text-primary-foreground hover:bg-highlight"
+              className="flex h-[35px] w-[100px] items-center justify-center gap-1 rounded-[6px] bg-primary text-base leading-[21px] font-medium text-primary-foreground hover:bg-highlight"
             >
               <LogIn aria-hidden className="size-5" /> Entrar
             </Link>

@@ -9,7 +9,7 @@ import { api } from '@/shared/api/endpoints'
 import { ApiError } from '@/shared/api/errors'
 import { qk } from '@/shared/api/query-keys'
 import { EmptyState, ErrorState, Spinner } from '@/shared/components/feedback'
-import { Field, focusFirstError, issuesToErrors, TextField } from '@/shared/components/form-field'
+import { EnsInput, Field, focusFirstError, issuesToErrors, TextField } from '@/shared/components/form-field'
 import {
   buyerInfo,
   networkLabels,
@@ -25,6 +25,7 @@ import {
 import { formatEth } from '@/shared/lib/money'
 import { session as sessionStorageArea, storageKeys } from '@/shared/lib/storage'
 import { cn } from '@/shared/lib/utils'
+import { useMediaQuery } from '@/shared/hooks/use-media-query'
 import { useSession } from '@/shared/session/session-store'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/shared/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -51,17 +52,17 @@ function QuoteLines({ quote }: { quote: Quote | undefined }) {
   return (
     <ul className="flex flex-col gap-3" data-testid="checkout-lines">
       {quote.lines.map((line) => (
-        <li key={line.itemId} className="grid grid-cols-[64px_1fr_auto] items-center gap-3 bg-card p-1 pr-4">
-          <img src={line.imageUrl.replace('-640', '-320')} alt="" width={64} height={64} className="size-16 rounded object-cover" />
-          <div className="min-w-0">
-            <p className="truncate font-bold">{line.nftName}</p>
-            <p className="text-sm text-muted-foreground">
+        <li key={line.itemId} className="flex min-h-[70px] items-center gap-2 bg-card pr-4 pl-1">
+          <img src={line.imageUrl.replace('-640', '-320')} alt="" width={70} height={70} className="size-[70px] shrink-0 rounded-[8px] object-cover" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <p className="truncate text-[15px] leading-4 font-bold">{line.nftName}</p>
+            <p className="truncate text-sm leading-4 text-muted-foreground">
               ID do token: {line.tokenId} · {line.editionName}
             </p>
           </div>
-          <p className="flex items-baseline gap-3 text-right">
-            <span className="text-sm">(x {line.quantity})</span>
-            <span className="font-bold text-highlight md:text-lg">{formatEth(line.lineTotalEth)}</span>
+          <p className="flex shrink-0 items-baseline gap-5 text-right">
+            <span className="text-sm leading-4">(x {line.quantity})</span>
+            <span className="text-lg leading-4 font-bold text-highlight">{formatEth(line.lineTotalEth)}</span>
           </p>
         </li>
       ))}
@@ -102,18 +103,59 @@ function WalletOption({ wallet, checked, onSelect }: { wallet: Wallet; checked: 
   return (
     <label
       className={cn(
-        'flex cursor-pointer items-center gap-4 rounded-2xl border bg-card p-4 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring md:rounded-none',
-        checked ? 'border-foreground' : 'border-border hover:border-primary',
+        'relative flex min-h-[93px] cursor-pointer items-start gap-[19px] rounded-[14px] border bg-card py-[15px] pr-8 pl-[19px] transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
+        checked ? 'border-primary/60' : 'border-transparent hover:border-border',
       )}
     >
-      <input type="radio" name="wallet" className="size-4 accent-[var(--primary)]" checked={checked} onChange={onSelect} />
-      <span className="flex min-w-0 flex-col">
-        <span className="font-bold">
-          {wallet.nickname} <span className="text-xs font-normal text-muted-foreground">({wallet.slot === 'primary' ? 'principal' : 'secundária'})</span>
+      <input type="radio" name="wallet" className="mt-[24px] size-4 shrink-0 accent-[var(--primary)]" checked={checked} onChange={onSelect} />
+      <span className="flex min-w-0 flex-col gap-2">
+        <span className="text-base leading-4 font-bold">
+          {wallet.nickname}
+          <span className="sr-only"> ({wallet.slot === 'primary' ? 'carteira principal' : 'carteira secundária'})</span>
         </span>
-        <span className="truncate text-sm text-muted-foreground">{wallet.ensOrSecondary || shortAddress(wallet.address)}</span>
-        <span className="text-sm text-muted-foreground">Rede {networkLabels[wallet.network]}</span>
+        <span className="text-sm leading-[22px] text-muted-foreground">
+          <span className="block truncate">{wallet.ensOrSecondary || shortAddress(wallet.address)}</span>
+          {wallet.slot === 'primary' ? `Rede principal ${networkLabels[wallet.network]}` : `Rede ${networkLabels[wallet.network]}`}
+        </span>
       </span>
+      <span aria-hidden className="absolute top-1/2 right-[19px] flex -translate-y-1/2 flex-col gap-[3px]">
+        <span className="size-[3px] rounded-full bg-subtle" />
+        <span className="size-[3px] rounded-full bg-subtle" />
+        <span className="size-[3px] rounded-full bg-subtle" />
+      </span>
+    </label>
+  )
+}
+
+const PROVIDER_MARK: Record<WalletProvider, string> = { walletconnect: 'W', metamask: 'M', coinbase: 'C' }
+/** Order used by the layout's "Carteira e rede" list. */
+const PROVIDER_ORDER: WalletProvider[] = ['walletconnect', 'metamask', 'coinbase']
+
+/** Provider choice. Desktop: 45px bordered rows; mobile: 65px cards with a mark (Figma). */
+function ProviderOption({ provider, checked, onSelect }: { provider: WalletProvider; checked: boolean; onSelect: () => void }) {
+  return (
+    <label
+      className={cn(
+        'flex cursor-pointer items-center transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring',
+        'min-h-[65px] gap-[11px] rounded-[15px] bg-card px-[14px] md:min-h-[45px] md:flex-row-reverse md:justify-end md:gap-2 md:rounded-[3px] md:border md:bg-transparent md:px-3',
+        checked ? 'md:border-primary' : 'md:border-border md:hover:border-primary/60',
+      )}
+    >
+      <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-[#2f1d15] text-sm font-bold text-highlight md:hidden">
+        {PROVIDER_MARK[provider]}
+      </span>
+      {provider === 'walletconnect' ? (
+        <span className="flex-1 text-sm leading-4 md:flex-none">
+          <span className="md:hidden">WalletConnect</span>
+          <span className="hidden md:inline-flex">
+            <WalletsBadge />
+            <span className="sr-only">WalletConnect</span>
+          </span>
+        </span>
+      ) : (
+        <span className="flex-1 text-sm leading-4 md:flex-none md:text-[15px] md:leading-5">{providerLabels[provider]}</span>
+      )}
+      <input type="radio" name="provider" className="size-4 shrink-0 accent-[var(--primary)]" checked={checked} onChange={onSelect} />
     </label>
   )
 }
@@ -152,6 +194,9 @@ export function CheckoutPage() {
   const [connected, setConnected] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<ApiError | null>(null)
   const [accepting, setAccepting] = useState(false)
+  const [showCoupon, setShowCoupon] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   const queryClient = useQueryClient()
   const acknowledge = useAcknowledgePrices()
 
@@ -220,6 +265,7 @@ export function CheckoutPage() {
     if (!selectedWallet) nextErrors.wallet = 'Cadastre uma carteira para continuar.'
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) {
+      setDetailsOpen(true)
       focusFirstError(formRef.current)
       return
     }
@@ -324,15 +370,16 @@ export function CheckoutPage() {
   const blockingIssues = liveQuote?.issues ?? []
 
   return (
-    <div className="container-page pt-6 md:pt-10">
-      <div className="mb-6 flex items-center gap-4 md:hidden">
-        <Link to="/cart" aria-label="Voltar ao carrinho" className="flex size-9 items-center justify-center rounded-full bg-card">
+    <div className="pt-8 max-md:px-7 md:container-page">
+      {/* Mobile header (frame "Mobile / Pagamento") */}
+      <div className="mb-4 flex h-11 items-start gap-6 md:hidden">
+        <Link to="/cart" aria-label="Voltar ao carrinho" className="flex size-[35px] shrink-0 items-center justify-center rounded-full border border-border bg-[#2f1d15]">
           <ChevronLeft aria-hidden className="size-5" />
         </Link>
-        <h1 className="text-xl font-bold">Pagamento com carteira</h1>
+        <h1 className="mt-[9px] text-xl leading-4 font-bold">Pagamento com carteira</h1>
       </div>
-      <nav aria-label="Trilha de navegação" className="mb-6 hidden text-sm font-bold md:block">
-        <ol className="flex gap-2">
+      <nav aria-label="Trilha de navegação" className="mb-8 hidden text-[15px] leading-4 font-bold md:block">
+        <ol className="flex gap-1.5">
           <li>
             <Link to="/" className="hover:text-highlight">Início</Link>
           </li>
@@ -362,99 +409,135 @@ export function CheckoutPage() {
         </div>
       )}
 
-      <form ref={formRef} onSubmit={openReview} noValidate className="grid gap-10 lg:grid-cols-[minmax(0,763px)_405px] lg:justify-between">
-        <section aria-labelledby="buyer-title" className="flex flex-col gap-5">
-          <h1 id="buyer-title" className="hidden text-lg font-bold md:block">
-            Perfil do colecionador
-          </h1>
-          <div className="grid gap-5 md:grid-cols-2 md:gap-x-6">
-            <TextField label="Nome de exibição" required value={draft.displayName} onChange={(e) => update('displayName', e.target.value)} error={errors.displayName} autoComplete="name" />
-            <TextField label="Nome de usuário" required value={draft.username} onChange={(e) => update('username', e.target.value)} error={errors.username} autoComplete="username" />
-            <Field label="Rede" required>
-              {(a11y) => (
-                <Select value={draft.network} onValueChange={(value) => update('network', value as Network)}>
-                  <SelectTrigger {...a11y} className="h-10 w-full rounded-[2px] border-input">
-                    <SelectValue placeholder="Selecione uma rede" />
-                  </SelectTrigger>
-                  <SelectContent className="border-border bg-card">
-                    {networks.map((n) => (
-                      <SelectItem key={n} value={n}>
-                        {networkLabels[n]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </Field>
-            <TextField label="Nome do perfil" required value={draft.profileName} onChange={(e) => update('profileName', e.target.value)} error={errors.profileName} />
-            <TextField label="Endereço da carteira" required readOnly value={selectedWallet?.address ?? ''} placeholder="Endereço 0x da carteira" error={errors.wallet} hint="Definido pela carteira selecionada" />
-            <TextField label="ENS ou carteira secundária (opcional)" readOnly value={selectedWallet?.ensOrSecondary ?? ''} placeholder="ENS ou carteira secundária (opcional)" />
-            <Field label="Tipo de carteira" required>
-              {(a11y) => (
-                <Select value={draft.provider} onValueChange={(value) => update('provider', value as WalletProvider)}>
-                  <SelectTrigger {...a11y} className="h-10 w-full rounded-[2px] border-input">
-                    <SelectValue placeholder="Selecione uma carteira" />
-                  </SelectTrigger>
-                  <SelectContent className="border-border bg-card">
-                    {walletProviders.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {providerLabels[p]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </Field>
-            <TextField label="Código de indicação" value={draft.referralCode} onChange={(e) => update('referralCode', e.target.value.toUpperCase())} error={errors.referralCode} hint="Opcional" />
-            <TextField label="E-mail" type="email" required value={draft.email} onChange={(e) => update('email', e.target.value)} error={errors.email} autoComplete="email" />
-            <Field label="Nome ENS" error={errors.ensName} hint="Opcional">
-              {(a11y) => (
-                <div className="flex gap-2">
-                  <span className="flex h-10 items-center rounded-[2px] border border-input px-3 text-sm" aria-hidden>
-                    .eth
-                  </span>
-                  <input
-                    {...a11y}
-                    value={draft.ensName}
-                    onChange={(e) => update('ensName', e.target.value.toLowerCase())}
-                    className="h-10 min-w-0 flex-1 rounded-[2px] border border-input bg-transparent px-3 aria-invalid:border-destructive"
-                  />
-                </div>
-              )}
-            </Field>
-          </div>
-          {walletList.length > 1 && (
-            <label className="flex items-center gap-2 text-[15px]">
-              <input
-                type="checkbox"
-                className="size-4 accent-[var(--primary)]"
-                checked={selectedWallet?.slot === 'secondary'}
-                onChange={(e) => {
-                  const target = walletList.find((w) => w.slot === (e.target.checked ? 'secondary' : 'primary'))
-                  if (target) setDraft((d) => ({ ...d, walletId: target.id, network: target.network, provider: target.provider }))
-                }}
-              />
-              Usar outra carteira?
-            </label>
-          )}
-          <Field label="Observação do colecionador (opcional)" error={errors.note}>
-            {(a11y) => (
-              <Textarea {...a11y} value={draft.note} onChange={(e) => update('note', e.target.value)} className="min-h-[150px] max-w-[350px] rounded-[2px] border-input" />
+      <form ref={formRef} onSubmit={openReview} noValidate className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,763fr)_minmax(0,405fr)] lg:gap-10 xl:grid-cols-[763px_405px] xl:justify-between xl:gap-0">
+        {/* Collector data: visible on desktop; collapsible on mobile (the mobile frame omits it). */}
+        <details
+          open={detailsOpen || isDesktop}
+          onToggle={(e) => !isDesktop && setDetailsOpen((e.target as HTMLDetailsElement).open)}
+          className="group order-2 md:order-none md:contents"
+        >
+          <summary className="flex cursor-pointer items-center justify-between rounded-[14px] bg-card px-5 py-4 text-base leading-4 font-bold md:hidden">
+            Dados do colecionador
+            <span className="text-sm font-normal text-highlight group-open:hidden">Editar</span>
+          </summary>
+          <section aria-labelledby="buyer-title" className="flex flex-col gap-3 pt-4 md:pt-0">
+            <h2 id="buyer-title" className="hidden text-[17px] leading-4 font-bold md:block">
+              Perfil do colecionador
+            </h2>
+            {/* Figma: two 370px columns, gap 24; fields 40px tall, 12px apart. */}
+            <div className="grid gap-y-3 md:grid-cols-2 md:gap-x-6">
+              <TextField label="Nome de exibição" required value={draft.displayName} onChange={(e) => update('displayName', e.target.value)} error={errors.displayName} autoComplete="name" />
+              <TextField label="Nome de usuário" required value={draft.username} onChange={(e) => update('username', e.target.value)} error={errors.username} autoComplete="username" />
+              <Field label="Rede" required>
+                {(a11y) => (
+                  <Select value={draft.network} onValueChange={(value) => update('network', value as Network)}>
+                    <SelectTrigger {...a11y} className="h-10 w-full rounded-[3px] border-border text-sm">
+                      <SelectValue placeholder="Selecione uma rede" />
+                    </SelectTrigger>
+                    <SelectContent className="border-border bg-card">
+                      {networks.map((n) => (
+                        <SelectItem key={n} value={n}>
+                          {networkLabels[n]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </Field>
+              <TextField label="Nome do perfil" required value={draft.profileName} onChange={(e) => update('profileName', e.target.value)} error={errors.profileName} />
+              <Field label="Endereço da carteira" required error={errors.wallet}>
+                {(a11y) => (
+                  <Select
+                    value={selectedWallet?.id ?? ''}
+                    onValueChange={(id) => {
+                      const target = walletList.find((w) => w.id === id)
+                      if (target) setDraft((d) => ({ ...d, walletId: target.id, network: target.network, provider: target.provider }))
+                    }}
+                  >
+                    <SelectTrigger {...a11y} className="h-10 w-full rounded-[3px] border-border text-sm">
+                      <SelectValue placeholder="Endereço 0x da carteira" />
+                    </SelectTrigger>
+                    <SelectContent className="border-border bg-card">
+                      {walletList.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {shortAddress(w.address)} · {w.nickname}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </Field>
+              <TextField label="ENS ou carteira secundária (opcional)" readOnly value={selectedWallet?.ensOrSecondary ?? ''} placeholder="ENS ou carteira secundária (opcional)" />
+              <Field label="Tipo de carteira" required>
+                {(a11y) => (
+                  <Select value={draft.provider} onValueChange={(value) => update('provider', value as WalletProvider)}>
+                    <SelectTrigger {...a11y} className="h-10 w-full rounded-[3px] border-border text-sm">
+                      <SelectValue placeholder="Selecione uma carteira" />
+                    </SelectTrigger>
+                    <SelectContent className="border-border bg-card">
+                      {walletProviders.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {providerLabels[p]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </Field>
+              <TextField label="Código de indicação" value={draft.referralCode} onChange={(e) => update('referralCode', e.target.value.toUpperCase())} error={errors.referralCode} placeholder="Opcional" />
+              <TextField label="E-mail" type="email" required value={draft.email} onChange={(e) => update('email', e.target.value)} error={errors.email} autoComplete="email" />
+              <Field label="Nome ENS" error={errors.ensName}>
+                {(a11y) => <EnsInput a11y={a11y} value={draft.ensName} onChange={(ensName) => update('ensName', ensName)} />}
+              </Field>
+            </div>
+            {walletList.length > 1 && (
+              <label className="mt-3 flex w-fit cursor-pointer items-center gap-2 text-[15px] leading-5">
+                <input
+                  type="checkbox"
+                  className="size-[15px] appearance-none rounded-full border-2 border-primary checked:bg-primary checked:shadow-[inset_0_0_0_2px_var(--background)]"
+                  checked={selectedWallet?.slot === 'secondary'}
+                  onChange={(e) => {
+                    const target = walletList.find((w) => w.slot === (e.target.checked ? 'secondary' : 'primary'))
+                    if (target) setDraft((d) => ({ ...d, walletId: target.id, network: target.network, provider: target.provider }))
+                  }}
+                />
+                Usar outra carteira?
+              </label>
             )}
-          </Field>
-        </section>
+            <Field label="Observação do colecionador (opcional)" error={errors.note} className="mt-3">
+              {(a11y) => (
+                <Textarea {...a11y} value={draft.note} onChange={(e) => update('note', e.target.value)} className="h-[152px] max-w-[350px] resize-none rounded-[3px] border-border" />
+              )}
+            </Field>
+          </section>
+        </details>
 
-        <aside aria-labelledby="order-title" className="flex flex-col gap-5">
-          <h2 id="order-title" className="text-lg font-bold">
-            Seus NFTs
-          </h2>
-          <QuoteLines quote={liveQuote} />
-          <CouponForm couponCode={cart?.couponCode ?? null} />
-          {quote.error && !liveQuote ? (
-            <ErrorState error={quote.error} onRetry={() => quote.refetch()} title="Não foi possível calcular o total" className="py-4" />
-          ) : (
-            <QuoteTotals quote={liveQuote} isUpdating={quote.isFetching} />
-          )}
+        <aside aria-labelledby="order-title" className="order-1 flex flex-col gap-3 md:order-none">
+          {/* Desktop: order lines and totals (mobile shows them in the review step). */}
+          <div className="hidden flex-col gap-3 md:flex">
+            <h2 id="order-title" className="text-[17px] leading-4 font-bold">
+              Seus NFTs
+            </h2>
+            <div className="flex justify-between border-b border-primary/30 pb-3 text-base leading-4 font-bold">
+              <span>NFTs</span>
+              <span>Subtotal</span>
+            </div>
+            <QuoteLines quote={liveQuote} />
+            {showCoupon || cart?.couponCode ? (
+              <CouponForm couponCode={cart?.couponCode ?? null} />
+            ) : (
+              <button type="button" onClick={() => setShowCoupon(true)} className="text-center text-sm leading-4 hover:text-highlight">
+                Tem um código promocional? Aplique aqui
+              </button>
+            )}
+            {quote.error && !liveQuote ? (
+              <ErrorState error={quote.error} onRetry={() => quote.refetch()} title="Não foi possível calcular o total" className="py-4" />
+            ) : (
+              <QuoteTotals quote={liveQuote} isUpdating={quote.isFetching} divided />
+            )}
+          </div>
+          <h2 className="sr-only md:hidden">Seu pedido</h2>
+
           {blockingIssues.length > 0 && (
             <div role="alert" className="text-sm text-destructive">
               <p>Seu carrinho precisa de atenção antes do pagamento:</p>
@@ -480,13 +563,16 @@ export function CheckoutPage() {
             </div>
           )}
 
-          <fieldset className="flex flex-col gap-3">
-            <legend className="mb-2 text-center text-lg font-bold md:w-full">Carteira e rede</legend>
-            <div className="hidden justify-start md:flex">
-              <WalletsBadge />
-            </div>
+          {/* Mobile: registered wallets as cards ("Carteira conectada"). */}
+          <fieldset className="flex flex-col gap-5 md:hidden">
+            <legend className="mb-4 flex w-full items-center justify-between text-base leading-4 font-bold">
+              Carteira conectada
+              <Link to="/account/wallets" className="text-sm text-highlight">
+                Trocar carteira
+              </Link>
+            </legend>
             {wallets.isPending ? (
-              <Skeleton className="h-20 w-full bg-card" />
+              <Skeleton className="h-[93px] w-full rounded-[14px] bg-card" />
             ) : walletList.length === 0 ? (
               <p className="text-sm">
                 Você ainda não cadastrou carteiras.{' '}
@@ -495,7 +581,7 @@ export function CheckoutPage() {
                 </Link>
               </p>
             ) : (
-              walletList.map((wallet) => (
+              [...walletList].reverse().map((wallet) => (
                 <WalletOption
                   key={wallet.id}
                   wallet={wallet}
@@ -505,41 +591,31 @@ export function CheckoutPage() {
               ))
             )}
           </fieldset>
+          {walletList.length === 0 && !wallets.isPending && (
+            <p className="hidden text-sm md:block">
+              Você ainda não cadastrou carteiras.{' '}
+              <Link to="/account/wallets" className="text-highlight underline">
+                Cadastrar carteira
+              </Link>
+            </p>
+          )}
 
-          <fieldset className="flex flex-col gap-3">
-            <legend className="mb-2 text-base font-bold">Conectar com</legend>
-            {walletProviders.map((provider) => (
-              <label
-                key={provider}
-                className={cn(
-                  'flex cursor-pointer items-center gap-4 rounded-2xl border bg-card px-4 py-3 transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring md:rounded-none',
-                  draft.provider === provider ? 'border-foreground' : 'border-border hover:border-primary',
-                )}
-              >
-                <span aria-hidden className="flex size-10 items-center justify-center rounded-full border border-border font-bold text-highlight">
-                  {providerLabels[provider][0]}
-                </span>
-                <span className="flex-1">{providerLabels[provider]}</span>
-                <input
-                  type="radio"
-                  name="provider"
-                  className="size-4 accent-[var(--primary)]"
-                  checked={draft.provider === provider}
-                  onChange={() => update('provider', provider)}
-                />
-              </label>
+          <fieldset className="mt-4 flex flex-col gap-4 md:mt-3">
+            <legend className="mb-4 text-base leading-4 font-bold md:mb-5 md:w-full md:text-center md:text-[17px]">Carteira e rede</legend>
+            {PROVIDER_ORDER.map((provider) => (
+              <ProviderOption key={provider} provider={provider} checked={draft.provider === provider} onSelect={() => update('provider', provider)} />
             ))}
           </fieldset>
 
-          <p className="flex justify-between text-lg font-bold md:hidden">
-            Total: <span className="text-highlight">{liveQuote ? formatEth(liveQuote.totalEth) : '—'}</span>
+          <p className="mt-2 flex items-baseline justify-end gap-7 text-[17px] leading-4 font-bold md:hidden">
+            Total: <span className="text-xl text-highlight">{liveQuote ? formatEth(liveQuote.totalEth) : '—'}</span>
           </p>
           <button
             type="submit"
             disabled={!liveQuote || quote.isFetching || blockingIssues.length > 0 || !selectedWallet}
-            className="h-14 rounded-full bg-gradient-to-r from-highlight to-primary font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 md:h-11 md:rounded-[4px] md:bg-primary md:bg-none"
+            className="mt-6 h-[60px] rounded-[40px] bg-gradient-to-r from-highlight to-primary text-base font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 md:mt-3 md:h-[45px] md:rounded-[8px] md:bg-primary md:bg-none md:text-[15px] md:leading-4"
           >
-            Revisar e confirmar compra
+            Confirmar compra
           </button>
         </aside>
       </form>

@@ -3,7 +3,7 @@ import { expect, NFT, test, USERS } from './support/fixtures'
 test.describe('Conta e sessão', () => {
   test('cadastro valida campos, trata conflito e cria a conta @mobile', async ({ page, open }) => {
     await open('/register')
-    await page.getByRole('button', { name: 'Criar conta' }).click()
+    await page.getByRole('button', { name: /^Criar (conta|perfil)$/ }).click()
     await expect(page.getByLabel('Nome de usuário')).toBeFocused()
     await expect(page.getByText('Informe um e-mail válido')).toBeVisible()
 
@@ -11,11 +11,11 @@ test.describe('Conta e sessão', () => {
     await page.getByLabel('E-mail', { exact: true }).fill(USERS.alice.email)
     await page.getByLabel('Senha', { exact: true }).fill('Segura123')
     await page.getByLabel('Confirmar senha').fill('Segura123')
-    await page.getByRole('button', { name: 'Criar conta' }).click()
+    await page.getByRole('button', { name: /^Criar (conta|perfil)$/ }).click()
     await expect(page.getByText('Este e-mail já está cadastrado.').first()).toBeVisible()
 
     await page.getByLabel('E-mail', { exact: true }).fill('nova@kurio.test')
-    await page.getByRole('button', { name: 'Criar conta' }).click()
+    await page.getByRole('button', { name: /^Criar (conta|perfil)$/ }).click()
     await expect(page).toHaveURL('/')
     await page.reload()
     await page.goto('/account/profile')

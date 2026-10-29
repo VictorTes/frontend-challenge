@@ -5,7 +5,7 @@ test.describe('Detalhe do NFT', () => {
     await open(`/nfts/${NFT.emerald.id}`)
     await expect(page.getByRole('heading', { level: 1, name: NFT.emerald.name })).toBeVisible()
     await expect(page.getByRole('radio', { name: '1/50' })).toBeChecked()
-    await expect(page.getByText('ID do token:')).toBeVisible()
+    await expect(page.getByText('ID do token:').filter({ visible: true })).toBeVisible()
     await page.getByRole('button', { name: 'Imagem 2 de 4' }).click()
     await expect(page.getByRole('button', { name: 'Imagem 2 de 4' })).toHaveAttribute('aria-pressed', 'true')
   })
@@ -29,7 +29,7 @@ test.describe('Detalhe do NFT', () => {
     await expect(page.getByRole('radio', { name: /^1\/1( |$)/ })).toBeDisabled()
 
     // 1/10 edition: limit 3 per order.
-    await page.getByText('1/10', { exact: true }).click()
+    await page.locator('label').filter({ visible: true, hasText: /^1\/10$/ }).click()
     const increase = page.getByRole('button', { name: 'Aumentar quantidade' }).first()
     await increase.click()
     await increase.click()

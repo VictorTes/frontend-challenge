@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react'
-import { useState } from 'react'
 import { EmptyState, ErrorState } from '@/shared/components/feedback'
 import { catalogTabs, collectionLabels, networkLabels, sortOptions, type CatalogTab, type SortOption } from '@/shared/contracts'
 import { cn } from '@/shared/lib/utils'
@@ -25,18 +24,24 @@ const SORT_LABELS: Record<SortOption, string> = {
   popular: 'Mais curtidos',
 }
 
+/** Window of up to 4 consecutive pages around the current one (layout: "1 2 3 4 >"). */
 function pageList(current: number, total: number): (number | 'gap')[] {
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
-  const pages = new Set([1, total, current - 1, current, current + 1].filter((p) => p >= 1 && p <= total))
-  const sorted = [...pages].sort((a, b) => a - b)
-  return sorted.flatMap((p, i) => (i > 0 && p - sorted[i - 1]! > 1 ? ['gap' as const, p] : [p]))
+  const size = Math.min(4, total)
+  const start = Math.min(Math.max(1, current - 1), total - size + 1)
+  return Array.from({ length: size }, (_, i) => start + i)
 }
 
-export function CatalogSection({ search }: { search: CatalogSearch }) {
+type Props = {
+  search: CatalogSearch
+  /** Controlled by the home page so the mobile search bar's filter icon can open it. */
+  filtersOpen: boolean
+  onFiltersOpenChange: (open: boolean) => void
+}
+
+export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFiltersOpen }: Props) {
   const navigate = useNavigate({ from: '/' })
   const query = toCatalogQuery(search)
   const { data, error, isPending, isFetching, isPlaceholderData, refetch } = useCatalog(query)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const tab = search.tab ?? 'all'
   const sort = search.sort ?? 'recent'
   const page = query.page ?? 1
@@ -70,19 +75,19 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
   )
 
   return (
-    <section id="mercado" aria-labelledby="catalog-title" className="container-page mt-10 scroll-mt-4 md:mt-[84px]">
+    <section id="mercado" aria-labelledby="catalog-title" className="container-page mt-6 scroll-mt-4 md:mt-24">
       <h2 id="catalog-title" className="sr-only">
         Catálogo de NFTs
       </h2>
-      <div className="grid gap-8 lg:grid-cols-[310px_1fr] lg:gap-[26px]">
-        <aside aria-label="Filtros" className="hidden flex-col gap-8 lg:flex">
+      <div className="grid gap-8 lg:grid-cols-[310px_minmax(0,1fr)] lg:gap-12">
+        <aside aria-label="Filtros" className="hidden flex-col gap-6 lg:flex">
           {filters('desktop')}
           <FeaturedSideCard />
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div role="tablist" aria-label="Seleção do catálogo" className="flex gap-4 overflow-x-auto md:gap-4">
+        <div className="flex min-w-0 flex-col gap-6 md:gap-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div role="tablist" aria-label="Seleção do catálogo" className="flex gap-4 overflow-x-auto md:gap-5">
               {catalogTabs.map((t) => (
                 <button
                   key={t}
@@ -91,28 +96,30 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
                   aria-selected={tab === t}
                   onClick={() => updateFilters({ tab: t === 'all' ? undefined : t })}
                   className={cn(
-                    'shrink-0 border-b-2 pb-1 text-[15px] font-medium transition',
-                    tab === t ? 'border-highlight text-highlight' : 'border-transparent hover:text-highlight',
+                    // Figma: 15/16 medium, active #e89b55 with a 2px #d28a4c underline 6px below.
+                    'shrink-0 border-b-2 pb-[4px] text-[15px] leading-4 font-medium transition',
+                    tab === t ? 'border-primary text-highlight' : 'border-transparent hover:text-highlight',
                   )}
                 >
                   {TAB_LABELS[t]}
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setFiltersOpen(true)}
-                className="flex items-center gap-2 rounded-[4px] border border-primary px-3 py-1.5 text-sm text-highlight lg:hidden"
+                className="hidden items-center gap-2 rounded-[4px] border border-primary px-3 py-1.5 text-sm text-highlight md:flex lg:hidden"
               >
                 <SlidersHorizontal aria-hidden className="size-4" /> Filtros
                 {activeChips.length > 0 && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{activeChips.length}</span>}
               </button>
-              <label htmlFor="catalog-sort" className="hidden text-[15px] sm:block">
+              <label htmlFor="catalog-sort" className="hidden text-[15px] leading-5 sm:block">
                 Ordenar por:
               </label>
+              <div className="hidden md:block">
               <Select value={sort} onValueChange={(value) => updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })}>
-                <SelectTrigger id="catalog-sort" aria-label="Ordenar por" className="h-9 w-[220px] border-none bg-transparent px-1 text-[15px] shadow-none">
+                <SelectTrigger id="catalog-sort" aria-label="Ordenar por" className="h-5 w-auto gap-2 border-none bg-transparent px-0 text-[15px] leading-5 shadow-none [&_svg]:text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="border-border bg-card">
@@ -123,6 +130,7 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             </div>
           </div>
 
@@ -161,7 +169,7 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
           {error && !data ? (
             <ErrorState error={error} onRetry={() => refetch()} title="Não foi possível carregar o catálogo" />
           ) : isPending ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 md:gap-x-6" aria-busy="true" aria-label="Carregando catálogo">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]" aria-busy="true" aria-label="Carregando catálogo">
               {Array.from({ length: 9 }, (_, i) => (
                 <NftCardSkeleton key={i} />
               ))}
@@ -180,7 +188,8 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
                 data-testid="catalog-grid"
                 aria-busy={isFetching}
                 className={cn(
-                  'grid grid-cols-2 gap-x-4 gap-y-10 transition-opacity sm:grid-cols-3 md:gap-x-6 md:gap-y-12',
+                  // Mobile layout staggers the second column (masonry look).
+                  'grid grid-cols-2 gap-x-4 gap-y-6 transition-opacity max-sm:[&>*:nth-child(even)]:mt-8 sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]',
                   isPlaceholderData && 'opacity-60',
                 )}
               >
@@ -190,19 +199,21 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
           )}
 
           {data && data.totalPages > 1 && (
-            <nav aria-label="Paginação" className="flex justify-end">
+            <nav aria-label="Paginação" className="flex justify-end md:mt-14">
               <ul className="flex items-center gap-2">
-                <li>
-                  <button
-                    type="button"
-                    aria-label="Página anterior"
-                    disabled={page <= 1}
-                    onClick={() => goToPage(page - 1)}
-                    className="flex size-8 items-center justify-center rounded-[4px] bg-card hover:text-highlight disabled:opacity-40"
-                  >
-                    <ChevronLeft aria-hidden className="size-4" />
-                  </button>
-                </li>
+                {/* The layout shows only "next"; "previous" appears once there is a previous page. */}
+                {page > 1 && (
+                  <li>
+                    <button
+                      type="button"
+                      aria-label="Página anterior"
+                      onClick={() => goToPage(page - 1)}
+                      className="flex size-[35px] items-center justify-center rounded-[4px] border border-border hover:text-highlight"
+                    >
+                      <ChevronLeft aria-hidden className="size-[18px]" />
+                    </button>
+                  </li>
+                )}
                 {pageList(page, data.totalPages).map((p, i) =>
                   p === 'gap' ? (
                     <li key={`gap-${i}`} aria-hidden className="px-1 text-subtle">
@@ -216,8 +227,8 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
                         aria-current={p === page ? 'page' : undefined}
                         onClick={() => goToPage(p)}
                         className={cn(
-                          'flex size-8 items-center justify-center rounded-[4px] text-sm',
-                          p === page ? 'bg-primary font-bold text-primary-foreground' : 'bg-card hover:text-highlight',
+                          'flex size-[35px] items-center justify-center rounded-[4px] text-lg leading-4',
+                          p === page ? 'bg-primary font-bold text-primary-foreground' : 'border border-border hover:text-highlight',
                         )}
                       >
                         {p}
@@ -231,9 +242,9 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
                     aria-label="Próxima página"
                     disabled={page >= data.totalPages}
                     onClick={() => goToPage(page + 1)}
-                    className="flex size-8 items-center justify-center rounded-[4px] bg-card hover:text-highlight disabled:opacity-40"
+                    className="flex size-[35px] items-center justify-center rounded-[4px] border border-border hover:text-highlight disabled:opacity-40"
                   >
-                    <ChevronRight aria-hidden className="size-4" />
+                    <ChevronRight aria-hidden className="size-[18px]" />
                   </button>
                 </li>
               </ul>
@@ -248,6 +259,24 @@ export function CatalogSection({ search }: { search: CatalogSearch }) {
           <SheetDescription className="px-4 text-muted-foreground">
             {data ? `${data.total} resultados` : 'Carregando resultados'}
           </SheetDescription>
+          {/* Mobile layout has no sort control on the page: it lives in the filter sheet. */}
+          <div className="flex flex-col gap-2 px-5 pt-2 md:hidden">
+            <label htmlFor="catalog-sort-mobile" className="text-lg leading-4 font-bold">
+              Ordenar por
+            </label>
+            <Select value={sort} onValueChange={(value) => updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })}>
+              <SelectTrigger id="catalog-sort-mobile" className="h-10 w-full rounded-[3px] border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="border-border bg-card">
+                {sortOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {SORT_LABELS[option]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {filters('mobile')}
         </SheetContent>
       </Sheet>

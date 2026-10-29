@@ -38,70 +38,77 @@ function CartRow({ item, issues }: { item: CartItem; issues: QuoteIssue[] }) {
   const setQuantity = (quantity: number) =>
     update.mutate({ itemId: item.id, quantity }, { onError: (err) => toast.error(ApiError.from(err).message) })
 
+  const removeItem = () => remove.mutate(item.id, { onError: (err) => toast.error(ApiError.from(err).message) })
+  const max = Math.max(item.quantity > itemMax(item) ? item.quantity : itemMax(item), 1)
+  const oldPrice = priceChanged && (
+    <s className="ml-2 text-xs text-subtle">
+      <span className="sr-only">antes </span>
+      {formatEth(item.addedPriceEth)}
+    </s>
+  )
+
   return (
-    <li
-      data-testid="cart-item"
-      data-item={item.nftId}
-      aria-busy={busy}
-      className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-2 overflow-hidden rounded-2xl bg-card md:grid-cols-[minmax(0,2.4fr)_1fr_1fr_1fr_40px] md:items-center md:gap-4 md:rounded-none md:pr-4"
-    >
-      <div className="row-span-3 flex items-center gap-4 md:row-span-1">
-        <img src={item.imageUrl.replace('-640', '-320')} alt="" width={100} height={100} className="size-[100px] object-cover md:size-[70px]" />
-        <div className="hidden min-w-0 md:block">
-          <p className="truncate font-bold">{item.nftName}</p>
-          <p className="text-sm text-muted-foreground">
-            ID do token: {item.tokenId} · Edição {item.editionName}
-          </p>
+    <li data-testid="cart-item" data-item={item.nftId} aria-busy={busy}>
+      {/* Mobile card (Figma: 358×100, radius 14, 100px artwork). */}
+      <div className="relative flex min-h-[100px] overflow-hidden rounded-[14px] bg-card md:hidden">
+        <img src={item.imageUrl.replace('-640', '-320')} alt="" width={100} height={100} className="size-[100px] shrink-0 rounded-[14px] object-cover" />
+        <div className="flex min-w-0 flex-1 flex-col py-[13px] pl-[9px]">
+          <p className="truncate pr-9 text-[15px] leading-4 font-bold">{item.nftName}</p>
+          <p className="mt-1.5 text-sm leading-4 text-muted-foreground">Edição: {item.editionName}</p>
+          <div className="mt-auto flex items-end justify-between pr-4">
+            <p className="text-lg leading-4 font-bold text-highlight">
+              <span className="sr-only">Total do item: </span>
+              {formatEth(mulEth(item.unitPriceEth, item.quantity))}
+              {oldPrice}
+            </p>
+            <QuantityStepper size="circle" label={`Quantidade de ${item.nftName}`} value={item.quantity} max={max} onChange={setQuantity} disabled={busy} />
+          </div>
         </div>
-      </div>
-      <div className="pt-3 md:hidden">
-        <p className="font-bold">{item.nftName}</p>
-        <p className="text-sm text-muted-foreground">Edição: {item.editionName}</p>
-      </div>
-      <p className="font-medium text-highlight md:text-lg">
-        <span className="sr-only">Preço unitário: </span>
-        {formatEth(item.unitPriceEth)}
-        {priceChanged && (
-          <s className="ml-2 text-xs text-subtle">
-            <span className="sr-only">antes </span>
-            {formatEth(item.addedPriceEth)}
-          </s>
-        )}
-      </p>
-      <div className="flex items-center justify-between gap-2 pr-3 pb-3 md:p-0">
-        <QuantityStepper
-          size="sm"
-          label={`Quantidade de ${item.nftName}`}
-          value={item.quantity}
-          max={Math.max(item.quantity > itemMax(item) ? item.quantity : itemMax(item), 1)}
-          onChange={setQuantity}
-          disabled={busy}
-        />
+        {/* The layout overlaps the trash icon with "+"; it sits in the corner here. */}
         <button
           type="button"
           aria-label={`Remover ${item.nftName} do carrinho`}
-          onClick={() => remove.mutate(item.id, { onError: (err) => toast.error(ApiError.from(err).message) })}
+          onClick={removeItem}
           disabled={busy}
-          className="text-highlight hover:text-destructive md:hidden"
+          className="absolute top-2 right-2 flex size-8 items-center justify-center text-highlight hover:text-destructive"
         >
-          <Trash2 aria-hidden className="size-5" />
+          <Trash2 aria-hidden className="size-[18px]" />
         </button>
       </div>
-      <p className="hidden font-bold text-highlight md:block md:text-lg">
-        <span className="sr-only">Total do item: </span>
-        {formatEth(mulEth(item.unitPriceEth, item.quantity))}
-      </p>
-      <button
-        type="button"
-        aria-label={`Remover ${item.nftName} do carrinho`}
-        onClick={() => remove.mutate(item.id, { onError: (err) => toast.error(ApiError.from(err).message) })}
-        disabled={busy}
-        className="hidden justify-center text-highlight hover:text-destructive md:flex"
-      >
-        <Trash2 aria-hidden className="size-5" />
-      </button>
+
+      {/* Desktop row (Figma: 782×70; columns at 0, 311, 450, 586 and 734). */}
+      <div className="hidden min-h-[70px] grid-cols-[minmax(0,311fr)_minmax(0,139fr)_minmax(0,136fr)_minmax(0,148fr)_24px] items-center bg-card pr-6 md:grid">
+        <div className="flex min-w-0 items-center gap-4">
+          <img src={item.imageUrl.replace('-640', '-320')} alt="" width={70} height={70} className="size-[70px] shrink-0 rounded-[6px] object-cover" />
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <p className="truncate text-[15px] leading-4 font-bold">{item.nftName}</p>
+            <p className="truncate text-sm leading-4 text-muted-foreground">
+              ID do token: {item.tokenId} · {item.editionName}
+            </p>
+          </div>
+        </div>
+        <p className="text-base leading-4 font-bold text-muted-foreground">
+          <span className="sr-only">Preço unitário: </span>
+          {formatEth(item.unitPriceEth)}
+          {oldPrice}
+        </p>
+        <QuantityStepper size="sm" label={`Quantidade de ${item.nftName}`} value={item.quantity} max={max} onChange={setQuantity} disabled={busy} />
+        <p className="text-base leading-4 font-bold text-highlight">
+          <span className="sr-only">Total do item: </span>
+          {formatEth(mulEth(item.unitPriceEth, item.quantity))}
+        </p>
+        <button
+          type="button"
+          aria-label={`Remover ${item.nftName} do carrinho`}
+          onClick={removeItem}
+          disabled={busy}
+          className="flex justify-center text-highlight hover:text-destructive"
+        >
+          <Trash2 aria-hidden className="size-6" strokeWidth={1.5} />
+        </button>
+      </div>
       {issues.length > 0 && (
-        <div className="col-span-2 px-3 pb-3 md:col-span-5 md:px-4">
+        <div className="pt-2 md:bg-card md:px-4 md:pb-3">
           <ItemIssues issues={issues} />
         </div>
       )}
@@ -123,16 +130,15 @@ export function CartPage() {
   const canCheckout = Boolean(quoteIsCurrent && issues.length === 0)
 
   return (
-    <div className="container-page pt-6 md:pt-10">
-      <div className="mb-6 flex items-center gap-4 md:hidden">
-        <button type="button" aria-label="Voltar" onClick={() => window.history.back()} className="flex size-9 items-center justify-center rounded-full bg-card">
+    <div className="pt-8 max-md:px-7 md:container-page">
+      <div className="mb-3 flex h-11 items-start gap-4 md:hidden">
+        <button type="button" aria-label="Voltar" onClick={() => window.history.back()} className="flex size-[35px] items-center justify-center rounded-full border border-border bg-[#2f1d15]">
           <ChevronLeft aria-hidden className="size-5" />
         </button>
-        <h1 className="flex-1 text-center text-xl font-bold">Carrinho de NFTs</h1>
-        <span className="size-9" />
+        <h1 className="mt-[9px] flex-1 pr-[35px] text-center text-xl leading-4 font-bold">Carrinho de NFTs</h1>
       </div>
-      <nav aria-label="Trilha de navegação" className="mb-1 hidden text-sm font-bold md:block">
-        <ol className="flex gap-2">
+      <nav aria-label="Trilha de navegação" className="mb-3 hidden text-[15px] leading-4 font-bold md:block">
+        <ol className="flex gap-1.5">
           <li>
             <Link to="/" className="hover:text-highlight">Início</Link>
           </li>
@@ -168,9 +174,9 @@ export function CartPage() {
           }
         />
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,782px)_332px] lg:justify-between">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,782px)_332px] lg:justify-between lg:gap-0">
           <section aria-label="Itens do carrinho">
-            <div className="hidden grid-cols-[minmax(0,2.4fr)_1fr_1fr_1fr_40px] gap-4 border-b border-border pb-3 font-bold md:grid" aria-hidden>
+            <div className="hidden grid-cols-[minmax(0,311fr)_minmax(0,139fr)_minmax(0,136fr)_minmax(0,148fr)_24px] border-b border-primary/30 pr-6 pb-3 text-base leading-4 font-bold md:grid" aria-hidden>
               <span>NFTs</span>
               <span>Preço</span>
               <span>Edições</span>
@@ -193,15 +199,19 @@ export function CartPage() {
                 </button>
               </div>
             )}
-            <ul className="mt-3 flex flex-col gap-3">
+            <ul className="flex flex-col gap-5 md:mt-3 md:gap-3">
               {cart.items.map((item) => (
                 <CartRow key={item.id} item={item} issues={issues.filter((i) => i.itemId === item.id)} />
               ))}
             </ul>
           </section>
 
-          <aside aria-labelledby="summary-title" className="flex flex-col gap-5 rounded-t-[28px] bg-card p-6 lg:rounded-none lg:bg-transparent lg:p-0">
-            <h2 id="summary-title" className="hidden border-b border-border pb-3 text-lg font-bold lg:block">
+          {/* Mobile: bottom sheet that sticks while the item list scrolls (frame "Mobile / Carrinho"). */}
+          <aside
+            aria-labelledby="summary-title"
+            className="sticky bottom-0 z-20 -mx-7 flex flex-col gap-6 rounded-t-[28px] bg-card px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.35)] md:static md:mx-0 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none"
+          >
+            <h2 id="summary-title" className="hidden border-b border-primary/30 pb-3 text-lg leading-4 font-bold lg:block">
               Resumo da carteira
             </h2>
             <CouponForm couponCode={cart.couponCode} />
@@ -219,11 +229,11 @@ export function CartPage() {
               type="button"
               disabled={!canCheckout}
               onClick={() => navigate({ to: '/checkout' })}
-              className="h-12 rounded-full bg-gradient-to-r from-highlight to-primary font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 lg:h-10 lg:rounded-[4px] lg:bg-primary lg:bg-none lg:font-medium"
+              className="h-[60px] rounded-[40px] bg-gradient-to-r from-highlight to-primary text-base font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 lg:-mt-3 lg:h-10 lg:rounded-[3px] lg:bg-primary lg:bg-none lg:text-[15px]"
             >
               Conectar e finalizar
             </button>
-            <Link to="/" hash="mercado" className="text-center text-highlight hover:underline">
+            <Link to="/" hash="mercado" className="-mt-3 hidden text-center text-[15px] leading-5 text-highlight hover:underline lg:block">
               Continuar explorando
             </Link>
           </aside>

@@ -1,12 +1,15 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { X } from 'lucide-react'
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Eye, EyeOff, X } from 'lucide-react'
+import { useId, useRef, useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
 import { notAvailable } from '@/app/layout/out-of-scope'
+import { CatalogSection } from '@/features/catalog/components/catalog-section'
+import { Hero } from '@/features/catalog/components/home-sections'
 import { ApiError } from '@/shared/api/errors'
-import { focusFirstError, issuesToErrors, PasswordField, TextField } from '@/shared/components/form-field'
+import { focusFirstError, issuesToErrors } from '@/shared/components/form-field'
 import { loginInput, registerInput } from '@/shared/contracts'
+import { useMediaQuery } from '@/shared/hooks/use-media-query'
 import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 import { useLogin, useRegister } from '../hooks'
 
 /** Only same-origin relative paths are accepted as post-login destinations. */
@@ -27,82 +30,159 @@ function GoogleIcon() {
   )
 }
 
-function SocialButtons() {
+/**
+ * Auth input from the layout: no visible label (placeholder only), so the
+ * label is kept for screen readers; errors appear right below.
+ */
+function AuthInput({
+  label,
+  error,
+  hint,
+  password,
+  ...props
+}: { label: string; error?: string; hint?: string; password?: boolean } & Omit<ComponentProps<'input'>, 'className'>) {
+  const id = useId()
+  const [visible, setVisible] = useState(false)
+  const describedBy = [error ? `${id}-error` : null, hint ? `${id}-hint` : null].filter(Boolean).join(' ') || undefined
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 text-sm">
-        <span className="h-px flex-1 bg-border" />
-        Ou continue com
-        <span className="h-px flex-1 bg-border" />
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          {...props}
+          type={password ? (visible ? 'text' : 'password') : props.type}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(
+            'h-[50px] w-full rounded-[10px] border border-border bg-transparent px-4 text-sm text-foreground placeholder:text-subtle focus:border-primary focus:outline-none aria-invalid:border-destructive md:h-10 md:rounded-[5px]',
+            password && 'pr-12',
+          )}
+        />
+        {password && (
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-pressed={visible}
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-subtle hover:text-foreground"
+          >
+            {visible ? <Eye aria-hidden className="size-[18px]" /> : <EyeOff aria-hidden className="size-[18px]" />}
+          </button>
+        )}
       </div>
-      <button
-        type="button"
-        onClick={() => notAvailable('O login com Google')}
-        className="flex h-10 items-center justify-center gap-2 rounded-[2px] border border-border text-sm text-muted-foreground hover:border-primary"
-      >
-        <GoogleIcon /> Continuar com Google
-      </button>
-      <button
-        type="button"
-        onClick={() => notAvailable('O login com Facebook')}
-        className="flex h-10 items-center justify-center gap-2 rounded-[2px] border border-border text-sm text-muted-foreground hover:border-primary"
-      >
-        <span aria-hidden className="text-lg font-bold text-[#3b5999]">
-          f
-        </span>
-        Continuar com Facebook
-      </button>
+      {hint && !error && (
+        <p id={`${id}-hint`} className="text-xs text-subtle">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
 
-function Shell({
-  mode,
-  redirect,
-  children,
-}: {
+function SocialButtons() {
+  const button =
+    'flex h-10 items-center justify-center gap-3 rounded-[5px] border border-border text-[13px] leading-4 font-medium text-muted-foreground hover:border-primary'
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3 text-[13px] leading-4">
+        <span className="h-px flex-1 bg-border" />
+        Ou continue com
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <div className="flex flex-col gap-4 md:gap-3 md:px-20">
+        <button type="button" onClick={() => notAvailable('O login com Google')} className={button}>
+          <GoogleIcon /> Continuar com Google
+        </button>
+        <button type="button" onClick={() => notAvailable('O login com Facebook')} className={button}>
+          <span aria-hidden className="text-lg leading-none font-bold text-[#3b5999]">
+            f
+          </span>
+          Continuar com Facebook
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** Home page rendered behind the desktop modal, as in the "Desktop / Login" frame. Inert. */
+function HomeBackdrop() {
+  return (
+    <div inert aria-hidden className="pointer-events-none">
+      <Hero />
+      <CatalogSection search={{}} filtersOpen={false} onFiltersOpenChange={() => undefined} />
+    </div>
+  )
+}
+
+type ShellProps = {
   mode: 'login' | 'register'
   redirect: string | undefined
+  description: string
+  /** Mobile frames use a heading instead of the tabs. */
+  mobileTitle: string
   children: ReactNode
-}) {
+}
+
+function Shell({ mode, redirect, description, mobileTitle, children }: ShellProps) {
   const navigate = useNavigate()
-  const tabClass = (active: boolean) =>
-    cn('text-xl transition md:text-xl', active ? 'font-medium text-highlight' : 'text-foreground hover:text-highlight')
-  return (
-    <div className="flex justify-center px-4 py-10 md:min-h-[70vh] md:items-center md:bg-black/40 md:py-16">
-      <section
-        aria-labelledby="auth-title"
-        className="relative w-full max-w-[500px] md:border-b-[10px] md:border-primary md:bg-card md:px-20 md:pt-12 md:pb-14"
-      >
-        <button
-          type="button"
-          aria-label="Fechar"
-          onClick={() => navigate({ to: safeRedirect(redirect) })}
-          className="absolute top-3 right-3 hidden rounded p-1 text-highlight hover:bg-accent md:block"
-        >
-          <X aria-hidden className="size-5" />
-        </button>
-        <p className="mb-16 text-center text-[32px] font-bold tracking-[0.12em] md:hidden">KURIO</p>
-        <h1 id="auth-title" className="sr-only">
-          {mode === 'login' ? 'Entrar' : 'Criar conta'}
-        </h1>
-        <nav aria-label="Entrar ou criar conta" className="mb-6 flex items-center justify-center gap-2">
-          <Link to="/login" search={{ redirect }} className={tabClass(mode === 'login')} aria-current={mode === 'login' ? 'page' : undefined}>
-            Entrar
-          </Link>
-          <span aria-hidden className="h-6 w-px bg-primary" />
-          <Link
-            to="/register"
-            search={{ redirect }}
-            className={tabClass(mode === 'register')}
-            aria-current={mode === 'register' ? 'page' : undefined}
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const close = () => navigate({ to: safeRedirect(redirect) })
+  const tab = (active: boolean) => cn('text-xl leading-4 font-medium transition', active ? 'text-highlight' : 'text-foreground hover:text-highlight')
+  const tabs = (
+    <nav aria-label="Entrar ou criar conta" className="flex items-center justify-center gap-2">
+      <Link to="/login" search={{ redirect }} className={tab(mode === 'login')} aria-current={mode === 'login' ? 'page' : undefined}>
+        Entrar
+      </Link>
+      <span aria-hidden className="h-5 w-px bg-destructive" />
+      <Link to="/register" search={{ redirect }} className={tab(mode === 'register')} aria-current={mode === 'register' ? 'page' : undefined}>
+        Criar conta
+      </Link>
+    </nav>
+  )
+
+  if (isDesktop) {
+    return (
+      <>
+        <HomeBackdrop />
+        {/* Figma "Sign In Modal": 500px wide, 160px from the top, 10px copper bottom border. */}
+        <Dialog open onOpenChange={(open) => !open && close()}>
+          <DialogContent
+            showCloseButton={false}
+            overlayClassName="bg-black/25"
+            className="top-[160px] max-h-[calc(100dvh-180px)] w-[500px] max-w-[calc(100vw-2rem)] translate-y-0 gap-0 overflow-y-auto rounded-none border-0 border-b-[10px] border-primary bg-card p-0 pt-12 pb-[46px] sm:max-w-[500px]"
           >
-            Criar conta
-          </Link>
-        </nav>
-        {children}
-      </section>
-    </div>
+            <button type="button" aria-label="Fechar" onClick={close} className="absolute top-3 right-[22px] rounded p-1 text-highlight hover:bg-accent">
+              <X aria-hidden className="size-4" />
+            </button>
+            <DialogTitle className="sr-only">{mode === 'login' ? 'Entrar' : 'Criar conta'}</DialogTitle>
+            {tabs}
+            <DialogDescription className="mx-auto mt-10 max-w-[404px] text-center text-[13px] leading-4 text-foreground">{description}</DialogDescription>
+            <div className="mt-6 flex flex-col gap-6">{children}</div>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
+
+  return (
+    <section aria-labelledby="auth-title" className="flex flex-col px-7 pt-20 pb-6">
+      <p aria-hidden className="flex h-[136px] items-center justify-center text-[32px] leading-[42px] font-bold tracking-[0.1em]">
+        KURIO
+      </p>
+      <h1 id="auth-title" className="mt-10 text-center text-xl leading-4 font-bold">
+        {mobileTitle}
+      </h1>
+      <p className="sr-only">{description}</p>
+      <div className="mt-10 flex flex-col gap-10">{children}</div>
+    </section>
   )
 }
 
@@ -135,15 +215,14 @@ export function LoginCard({ redirect, expired }: { redirect?: string; expired?: 
   }
 
   return (
-    <Shell mode="login" redirect={redirect}>
-      <p className="mb-6 text-center text-sm">Entre para gerenciar sua carteira, coleção e perfil de criador.</p>
-      {expired && (
-        <p role="status" className="mb-4 rounded bg-band px-3 py-2 text-sm text-highlight">
-          Sua sessão expirou. Entre novamente para continuar de onde parou.
-        </p>
-      )}
-      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
-        <TextField
+    <Shell mode="login" redirect={redirect} mobileTitle="Entrar" description="Entre para gerenciar sua carteira, coleção e perfil de criador.">
+      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-3 md:px-20">
+        {expired && (
+          <p role="status" className="rounded bg-band px-3 py-2 text-sm text-highlight">
+            Sua sessão expirou. Entre novamente para continuar de onde parou.
+          </p>
+        )}
+        <AuthInput
           label="E-mail"
           type="email"
           autoComplete="email"
@@ -153,15 +232,17 @@ export function LoginCard({ redirect, expired }: { redirect?: string; expired?: 
           error={errors.email}
           required
         />
-        <PasswordField
+        <AuthInput
           label="Senha"
+          password
           autoComplete="current-password"
+          placeholder="Senha"
           value={values.password}
           onChange={(e) => setValues((v) => ({ ...v, password: e.target.value }))}
           error={errors.password}
           required
         />
-        <button type="button" onClick={() => notAvailable('A recuperação de senha')} className="self-end text-sm text-highlight hover:underline">
+        <button type="button" onClick={() => notAvailable('A recuperação de senha')} className="self-end text-sm leading-4 text-highlight hover:underline">
           Esqueceu a senha?
         </button>
         {formError && (
@@ -169,16 +250,18 @@ export function LoginCard({ redirect, expired }: { redirect?: string; expired?: 
             {formError}
           </p>
         )}
-        <Button type="submit" size="lg" disabled={login.isPending} className="mt-2">
+        <button
+          type="submit"
+          disabled={login.isPending}
+          className="mt-7 h-[60px] rounded-[10px] bg-primary text-base leading-4 font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60 md:mt-3 md:h-[45px] md:rounded-[5px]"
+        >
           {login.isPending ? 'Entrando…' : 'Entrar'}
-        </Button>
+        </button>
       </form>
-      <div className="mt-6">
-        <SocialButtons />
-      </div>
-      <p className="mt-8 text-center text-muted-foreground md:hidden">
+      <SocialButtons />
+      <p className="text-center text-[15px] leading-5 text-muted-foreground md:hidden">
         Novo na Kurio?{' '}
-        <Link to="/register" search={{ redirect }} className="text-highlight underline">
+        <Link to="/register" search={{ redirect }} className="underline">
           Crie uma conta
         </Link>
       </p>
@@ -217,32 +300,37 @@ export function RegisterCard({ redirect }: { redirect?: string }) {
     }
   }
 
-  const set = (key: keyof typeof values) => (e: { target: { value: string } }) =>
-    setValues((v) => ({ ...v, [key]: e.target.value }))
+  const set = (key: keyof typeof values) => (e: { target: { value: string } }) => setValues((v) => ({ ...v, [key]: e.target.value }))
 
   return (
-    <Shell mode="register" redirect={redirect}>
-      <p className="mb-6 text-center text-sm">Crie seu perfil de colecionador e conecte uma carteira quando quiser.</p>
-      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-4">
-        <TextField label="Nome de usuário" autoComplete="username" value={values.username} onChange={set('username')} error={errors.username} hint="Letras minúsculas, números ou _" required />
-        <TextField label="E-mail" type="email" autoComplete="email" placeholder="Digite seu e-mail" value={values.email} onChange={set('email')} error={errors.email} required />
-        <PasswordField label="Senha" autoComplete="new-password" value={values.password} onChange={set('password')} error={errors.password} hint="Mínimo de 8 caracteres, com letras e números" required />
-        <PasswordField label="Confirmar senha" autoComplete="new-password" value={values.confirm} onChange={set('confirm')} error={errors.confirm} required />
+    <Shell
+      mode="register"
+      redirect={redirect}
+      mobileTitle="Criar perfil de colecionador"
+      description="Crie seu perfil de colecionador e conecte uma carteira quando quiser."
+    >
+      <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-3 md:px-20">
+        <AuthInput label="Nome de usuário" autoComplete="username" placeholder="Nome de usuário" value={values.username} onChange={set('username')} error={errors.username} required />
+        <AuthInput label="E-mail" type="email" autoComplete="email" placeholder="Digite seu e-mail" value={values.email} onChange={set('email')} error={errors.email} required />
+        <AuthInput label="Senha" password autoComplete="new-password" placeholder="Senha" value={values.password} onChange={set('password')} error={errors.password} hint="Mínimo de 8 caracteres, com letras e números" required />
+        <AuthInput label="Confirmar senha" password autoComplete="new-password" placeholder="Confirmar senha" value={values.confirm} onChange={set('confirm')} error={errors.confirm} required />
         {formError && (
           <p role="alert" className="text-sm text-destructive">
             {formError}
           </p>
         )}
-        <Button type="submit" size="lg" disabled={register.isPending} className="mt-2">
-          {register.isPending ? 'Criando conta…' : 'Criar conta'}
-        </Button>
+        <button
+          type="submit"
+          disabled={register.isPending}
+          className="mt-7 h-[60px] rounded-[10px] bg-primary text-base leading-4 font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60 md:mt-3 md:h-[45px] md:rounded-[5px]"
+        >
+          {register.isPending ? 'Criando conta…' : <><span className="md:hidden">Criar perfil</span><span className="hidden md:inline">Criar conta</span></>}
+        </button>
       </form>
-      <div className="mt-6">
-        <SocialButtons />
-      </div>
-      <p className="mt-8 text-center text-muted-foreground md:hidden">
+      <SocialButtons />
+      <p className="text-center text-[15px] leading-5 text-muted-foreground md:hidden">
         Já tem uma conta?{' '}
-        <Link to="/login" search={{ redirect }} className="text-highlight underline">
+        <Link to="/login" search={{ redirect }} className="underline">
           Entre
         </Link>
       </p>

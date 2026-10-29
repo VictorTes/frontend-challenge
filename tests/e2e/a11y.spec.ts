@@ -21,6 +21,22 @@ test.describe('Acessibilidade', () => {
     await expect(page.locator('#conteudo')).toBeFocused()
   })
 
+  test('abas do detalhe seguem o padrão de setas do WAI-ARIA', async ({ page, open }) => {
+    await open(`/nfts/${NFT.emerald.id}`)
+    const details = page.getByRole('tab', { name: 'Detalhes do NFT' })
+    const reviews = page.getByRole('tab', { name: /Avaliações de colecionadores/ })
+    await details.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(reviews).toBeFocused()
+    await expect(reviews).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByRole('tabpanel')).toContainText('4.8 de 5')
+    await page.keyboard.press('Home')
+    await expect(details).toBeFocused()
+    await expect(page.getByRole('tabpanel')).toContainText('Contrato inteligente ERC-721')
+    // Only the selected tab is in the Tab order.
+    await expect(reviews).toHaveAttribute('tabindex', '-1')
+  })
+
   test('diálogo de busca prende o foco e devolve ao gatilho ao fechar', async ({ page, open }) => {
     await open('/')
     const trigger = page.getByRole('button', { name: 'Buscar' })

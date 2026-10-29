@@ -13,7 +13,7 @@ export async function addToCart(page: Page, nftId: string, quantity = 1) {
 
 /** Opens the review dialog and connects the selected wallet. */
 export async function reviewAndConnect(page: Page) {
-  await page.getByRole('button', { name: 'Revisar e confirmar compra' }).click()
+  await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Revise sua compra' })
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: /^Conectar / }).click()

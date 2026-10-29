@@ -59,7 +59,7 @@ test.describe('Falhas de pagamento', () => {
     await login('alice', '/')
     await addToCart(page, NFT.emerald.id)
     await page.goto('/checkout')
-    await page.getByRole('button', { name: 'Revisar e confirmar compra' }).click()
+    await page.getByRole('button', { name: 'Confirmar compra', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Revise sua compra' })
     await dialog.getByRole('button', { name: /^Conectar / }).click()
     await expect(dialog.getByRole('alert')).toContainText('A conexão foi recusada na carteira.')

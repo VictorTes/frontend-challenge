@@ -1,5 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { FacebookIcon, InstagramIcon, LinkedinIcon, TwitterIcon, YoutubeIcon } from '@/shared/components/brand-icons'
+import {
+  FacebookIcon,
+  InstagramIcon,
+  LinkedinIcon,
+  TwitterIcon,
+  YoutubeIcon,
+} from '@/shared/components/brand-icons'
 import { notAvailable } from './out-of-scope'
 
 const FEATURES = [
@@ -21,10 +27,19 @@ const FEATURES = [
 ]
 
 const COLUMNS: { title: string; links: string[] }[] = [
-  { title: 'Meu perfil', links: ['Meu perfil', 'Minha coleção', 'Atividade', 'Estúdio do criador', 'Lista de interesse'] },
+  {
+    title: 'Meu perfil',
+    links: ['Meu perfil', 'Minha coleção', 'Atividade', 'Estúdio do criador', 'Lista de interesse'],
+  },
   {
     title: 'Central de ajuda',
-    links: ['Central de ajuda', 'Como comprar NFTs', 'Carteira e segurança', 'Política do mercado', 'Denunciar item'],
+    links: [
+      'Central de ajuda',
+      'Como comprar NFTs',
+      'Carteira e segurança',
+      'Política do mercado',
+      'Denunciar item',
+    ],
   },
   { title: 'Coleções', links: ['Arte digital', 'Fotografia', 'Música', 'Arte 3D', 'Utilidade'] },
 ]
@@ -37,10 +52,11 @@ const SOCIAL = [
   { label: 'YouTube', icon: YoutubeIcon },
 ]
 
+/** "METAMASK • WALLETCONNECT • COINBASE" chip (Figma: 26px tall, #38220f, border #55321f). */
 export function WalletsBadge() {
   return (
-    <span className="inline-flex items-center gap-2 rounded-[4px] border border-primary/60 bg-band px-2.5 py-1 text-[9px] font-bold tracking-[0.01em] text-highlight">
-      METAMASK <span aria-hidden>•</span> WALLETCONNECT <span aria-hidden>•</span> COINBASE
+    <span className="inline-flex h-[26px] items-center gap-[10px] rounded-[6px] border border-[#55321f] bg-band px-2 text-[9px] leading-3 font-bold tracking-[0.01em] whitespace-nowrap text-highlight">
+      METAMASK&nbsp;&nbsp;•&nbsp;&nbsp;WALLETCONNECT&nbsp;&nbsp;•&nbsp;&nbsp;COINBASE
     </span>
   )
 }
@@ -52,9 +68,12 @@ function Newsletter() {
     notAvailable('A newsletter')
   }
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 lg:pl-4">
-      <h2 className="text-lg leading-[1] font-bold">Antecipe-se ao próximo lançamento</h2>
-      <div className="flex">
+    <form
+      onSubmit={submit}
+      className="flex flex-col gap-3 px-4 lg:min-w-0 lg:flex-[1.35] xl:w-[357px] xl:flex-none"
+    >
+      <h2 className="text-lg leading-4 font-bold">Antecipe-se ao próximo lançamento</h2>
+      <div className="mt-1 flex h-10 overflow-hidden rounded-[6px] bg-band">
         <label htmlFor="newsletter-email" className="sr-only">
           E-mail para novidades
         </label>
@@ -64,13 +83,16 @@ function Newsletter() {
           placeholder="digite seu e-mail..."
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-10 min-w-0 flex-1 bg-[#2f1d15] px-3 text-sm placeholder:text-subtle"
+          className="min-w-0 flex-1 bg-transparent pl-3 text-sm placeholder:text-subtle focus:outline-none"
         />
-        <button type="submit" className="h-10 bg-primary px-4 font-bold text-primary-foreground hover:bg-highlight">
+        <button
+          type="submit"
+          className="w-[85px] bg-primary text-lg leading-4 font-bold text-primary-foreground hover:bg-highlight"
+        >
           Enviar
         </button>
       </div>
-      <p className="text-sm leading-[1.6] text-muted-foreground">
+      <p className="text-[13px] leading-[22px] text-muted-foreground">
         Receba lançamentos selecionados, histórias de criadores e novidades do mercado.
       </p>
     </form>
@@ -79,33 +101,48 @@ function Newsletter() {
 
 export function Footer() {
   return (
-    <footer className="container-page mt-20 mb-24 md:mb-6">
-      <div className="grid gap-8 bg-card px-6 py-8 md:grid-cols-2 lg:grid-cols-4 lg:px-12">
+    <footer className="container-page mt-24 mb-28 md:mb-6">
+      {/* Features + newsletter (Figma: 1200×250, padding 32) */}
+      <div className="flex flex-col gap-7 bg-card p-8 lg:min-h-[250px] lg:flex-row lg:gap-0">
         {FEATURES.map((f) => (
-          <div key={f.letter} className="flex flex-col gap-3 lg:border-r lg:border-primary lg:pr-6">
-            <span aria-hidden className="flex size-[74px] items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+          <div
+            key={f.letter}
+            className="flex flex-col gap-3 px-4 lg:min-w-0 lg:flex-1 lg:border-r lg:border-primary xl:w-[265px] xl:flex-none"
+          >
+            <span
+              aria-hidden
+              className="flex size-[74px] items-center justify-center rounded-full bg-primary text-2xl leading-8 font-bold text-primary-foreground"
+            >
               {f.letter}
             </span>
-            <h2 className="text-lg font-bold">{f.title}</h2>
-            <p className="text-sm leading-[1.6] text-muted-foreground">{f.text}</p>
+            <h2 className="text-[17px] leading-4 font-bold">{f.title}</h2>
+            <p className="max-w-[204px] text-sm leading-[22px] text-muted-foreground">{f.text}</p>
           </div>
         ))}
         <Newsletter />
       </div>
-      <div className="grid gap-4 bg-band px-6 py-6 text-sm sm:grid-cols-2 lg:grid-cols-4 lg:items-center lg:px-8">
-        <span className="font-bold tracking-[0.12em]">KURIO</span>
-        <span>Feito para colecionadores, criadores e cultura</span>
+      {/* Contact band (Figma: 88px, #38220f) */}
+      <div className="grid gap-4 bg-band p-8 text-sm leading-[22px] sm:grid-cols-2 lg:items-center xl:grid-cols-[211px_230px_211px_1fr] xl:gap-[81px]">
+        <span className="font-bold tracking-[0.1em]">KURIO</span>
+        <span className="lg:whitespace-pre-line">
+          {'Feito para colecionadores,\ncriadores e cultura'}
+        </span>
         <span>contato@email.com</span>
         <span>+55 11 4002 8922</span>
       </div>
-      <div className="grid gap-8 bg-card px-6 py-8 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      {/* Link columns (Figma: 236px, gap 124) */}
+      <div className="grid gap-8 bg-card p-8 sm:grid-cols-2 lg:grid-cols-[179px_179px_179px_228px] lg:justify-between lg:gap-0">
         {COLUMNS.map((col) => (
-          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-3">
-            <h2 className="text-lg font-bold">{col.title}</h2>
-            <ul className="flex flex-col gap-2 text-sm">
+          <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2">
+            <h2 className="text-lg leading-4 font-bold">{col.title}</h2>
+            <ul className="text-sm leading-[30px]">
               {col.links.map((link) => (
                 <li key={link}>
-                  <button type="button" onClick={() => notAvailable(link)} className="text-left hover:text-highlight">
+                  <button
+                    type="button"
+                    onClick={() => notAvailable(link)}
+                    className="text-left hover:text-highlight"
+                  >
                     {link}
                   </button>
                 </li>
@@ -113,27 +150,33 @@ export function Footer() {
             </ul>
           </nav>
         ))}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold">Redes sociais</h2>
-          <ul className="flex gap-2">
-            {SOCIAL.map(({ label, icon: Icon }) => (
-              <li key={label}>
-                <button
-                  type="button"
-                  aria-label={label}
-                  onClick={() => notAvailable(`O perfil no ${label}`)}
-                  className="flex size-8 items-center justify-center rounded-[4px] border border-primary text-highlight hover:bg-primary/10"
-                >
-                  <Icon className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-          <h2 className="text-lg font-bold">Carteiras compatíveis</h2>
-          <WalletsBadge />
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-5">
+            <h2 className="text-lg leading-4 font-bold">Redes sociais</h2>
+            <ul className="flex gap-[10px]">
+              {SOCIAL.map(({ label, icon: Icon }) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    aria-label={label}
+                    onClick={() => notAvailable(`O perfil no ${label}`)}
+                    className="flex size-[30px] items-center justify-center rounded-[4px] border border-primary text-highlight hover:bg-primary/10"
+                  >
+                    <Icon className="size-[14px]" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3">
+            <h2 className="text-lg leading-4 font-bold">Carteiras compatíveis</h2>
+            <WalletsBadge />
+          </div>
         </div>
       </div>
-      <p className="py-5 text-center text-sm">© 2026 Kurio. Propriedade digital para todos.</p>
+      <p className="text-center text-sm leading-[30px]">
+        © 2026 Kurio. Propriedade digital para todos.
+      </p>
     </footer>
   )
 }

@@ -55,6 +55,8 @@ const EDITION_TEMPLATES: { name: string; supply: number | null; multiplier: numb
 
 export const NFT_COUNT = 60
 
+const PRICE_EXTREMES: Record<number, string> = { 10: '0.02', 11: '12.3' }
+
 function pct(value: string, percent: number): string {
   return fromWei((toWei(value) * BigInt(percent)) / 100n)
 }
@@ -82,7 +84,9 @@ export function seedNfts(): NftDetail[] {
     const tokenNumber = String(number).padStart(3, '0')
     const id = `${name.toLowerCase().replace(/\s+/g, '-')}-${tokenNumber}`
     // Base price for the "1/50" edition, between 0.02 and ~6 ETH.
-    const basePrice = figma?.price ?? round2(fromWei(BigInt(Math.floor(20 + rand() * 5980)) * 10n ** 15n))
+    const generated = round2(fromWei(BigInt(Math.floor(20 + rand() * 5980)) * 10n ** 15n))
+    // Catalog extremes match the layout's price filter: "Preço: 0,02 - 12,30 ETH".
+    const basePrice = figma?.price ?? PRICE_EXTREMES[index] ?? generated
 
     // 1–4 editions; the layout's flagship NFT shows all four.
     const editionCount = index === 0 ? 4 : 1 + (index % 4)
@@ -97,7 +101,7 @@ export function seedNfts(): NftDetail[] {
       // Deterministic stock: some sold out, some with a single unit left.
       let available = supply === null ? 100 : supply - ((index + e) % Math.max(1, Math.ceil(supply / 3)))
       if (index % 13 === 12) available = 0
-      if (index === 5 && t.name === '1/50') available = 2
+      if (index === 14 && t.name === '1/50') available = 2
       return {
         id: `${id}-${t.name === 'ABERTA' ? 'open' : t.name.replace('/', 'of')}`,
         name: t.name,
@@ -141,8 +145,9 @@ export function seedNfts(): NftDetail[] {
       images: gallery,
       editions,
       attributes: [...ATTRIBUTES[art].slice(0, 2), (figma?.rare ?? index % 9 === 4) ? 'Raro' : 'Comum'],
-      rating: 4 + ((index * 7) % 10) / 10,
-      reviewCount: 5 + ((index * 11) % 40),
+      // The flagship NFT shows "4.8 (19)" in the layout.
+      rating: index === 0 ? 4.8 : 4 + ((index * 7) % 10) / 10,
+      reviewCount: index === 0 ? 19 : 5 + ((index * 11) % 40),
       contractAddress: `0x7A42${(index * 2654435761).toString(16).padStart(32, '0').slice(0, 32)}19E8`,
       royaltyPercent: 5,
     }

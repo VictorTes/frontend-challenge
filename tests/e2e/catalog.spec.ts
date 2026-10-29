@@ -1,4 +1,4 @@
-import { expect, filtersInSheet, test } from './support/fixtures'
+import { expect, filtersInSheet, isMobile, test } from './support/fixtures'
 
 const grid = (page: import('@playwright/test').Page) => page.getByTestId('catalog-grid')
 const cardNames = (page: import('@playwright/test').Page) => grid(page).locator('article h3').allTextContents()
@@ -33,10 +33,14 @@ test.describe('Catálogo', () => {
     await expect(page).toHaveURL(/network=.*ethereum/)
     await expect(page.getByRole('button', { name: 'Remover filtro Arte digital' })).toBeVisible()
 
-    // Sorting
+    // Sorting (below 768px the sort control lives in the filter sheet)
+    if (isMobile(page)) await page.getByRole('button', { name: /Filtros/ }).click()
     await page.getByRole('combobox', { name: 'Ordenar por' }).click()
     await page.getByRole('option', { name: 'Menor preço' }).click()
+    if (isMobile(page)) await page.keyboard.press('Escape')
     await expect(page).toHaveURL(/sort=price-asc/)
+    await expect(grid(page)).toHaveAttribute('aria-busy', 'false')
+    await expect(grid(page)).not.toHaveClass(/opacity-60/)
     const prices = await grid(page).locator('article p span.font-bold').allTextContents()
     const numeric = prices.map((p) => Number(p.replace(/[^\d.]/g, '')))
     expect(numeric).toEqual([...numeric].sort((a, b) => a - b))

@@ -39,7 +39,7 @@ export default function MockPanel() {
   }
 
   return (
-    <div className="fixed bottom-24 left-3 z-50 md:bottom-4">
+    <div className="fixed top-[38%] left-0 z-50 md:top-auto md:bottom-4 md:left-3">
       {open ? (
         <section
           aria-label="Cenários de mock"

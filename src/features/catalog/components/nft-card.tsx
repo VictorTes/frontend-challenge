@@ -66,9 +66,10 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
 
   return (
     <article className="group flex flex-col gap-3" aria-label={nft.name}>
-      <div className="relative rounded-lg bg-card p-4">
+      {/* Figma: 258×300 card surface, 250px artwork with radius 15. */}
+      <div className="relative bg-card px-1 pt-6 pb-[26px] max-md:rounded-[18px] max-md:px-1.5 max-md:pt-1.5 max-md:pb-6">
         {nft.rare && (
-          <span className="absolute top-0 left-0 z-10 bg-primary px-3 py-1 text-sm font-medium text-primary-foreground">
+          <span className="absolute top-0 left-0 z-10 flex h-[29px] w-20 items-center justify-center bg-primary text-base leading-4 font-medium text-primary-foreground max-md:rounded-tl-[18px] max-md:h-8 max-md:w-[68px] max-md:text-sm">
             RARO
           </span>
         )}
@@ -78,7 +79,7 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
             alt=""
             sizes="(min-width: 1024px) 236px, (min-width: 768px) 30vw, 45vw"
             priority={priority}
-            className={cn(soldOut && 'opacity-60')}
+            className={cn('rounded-[15px]', soldOut && 'opacity-60')}
           />
         </Link>
         {soldOut && (
@@ -86,13 +87,15 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
             ESGOTADO
           </span>
         )}
-        <div className="absolute inset-x-0 bottom-1 flex justify-center gap-2 opacity-100 transition md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+        {/* Mobile layout: heart in the artwork's top-right corner. */}
+        <FavoriteButton nft={nft} className="absolute top-3 right-3 z-10 size-7 rounded-full bg-background/80 md:hidden [&_svg]:size-4" />
+        <div className="absolute inset-x-0 bottom-1 hidden justify-center gap-2 transition md:flex md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
           <button
             type="button"
             onClick={quickAdd}
             disabled={soldOut || addToCart.isPending}
             aria-label={`Adicionar ${nft.name} ao carrinho`}
-            className="hidden size-[34px] items-center justify-center rounded-[6px] bg-background/90 hover:text-highlight disabled:opacity-50 md:flex"
+            className="flex size-[34px] items-center justify-center rounded-[6px] bg-background/90 hover:text-highlight disabled:opacity-50"
           >
             <ShoppingCart aria-hidden className="size-5" />
           </button>
@@ -101,19 +104,19 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
             to="/nfts/$nftId"
             params={{ nftId: nft.id }}
             aria-label={`Ver detalhes de ${nft.name}`}
-            className="hidden size-[34px] items-center justify-center rounded-[6px] bg-background/90 hover:text-highlight md:flex"
+            className="flex size-[34px] items-center justify-center rounded-[6px] bg-background/90 hover:text-highlight"
           >
             <Eye aria-hidden className="size-5" />
           </Link>
         </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <h3 className="text-base">
+      <div className="flex flex-col gap-3 max-md:gap-1 max-md:px-2">
+        <h3 className="text-base leading-4">
           <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="hover:text-highlight focus-visible:text-highlight">
             {nft.name}
           </Link>
         </h3>
-        <p className="flex flex-wrap items-baseline gap-2 text-lg">
+        <p className="flex flex-wrap items-baseline gap-3 text-lg leading-4">
           <span className="font-bold text-highlight">
             <span className="sr-only">Preço: </span>
             {formatEth(nft.priceEth)}
@@ -133,8 +136,8 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
 export function NftCardSkeleton() {
   return (
     <div className="flex flex-col gap-3" aria-hidden>
-      <div className="rounded-lg bg-card p-4">
-        <Skeleton className="aspect-square w-full rounded-[18px] bg-accent" />
+      <div className="bg-card px-1 pt-6 pb-[26px]">
+        <Skeleton className="aspect-square w-full rounded-[15px] bg-accent" />
       </div>
       <Skeleton className="h-4 w-3/4 bg-accent" />
       <Skeleton className="h-5 w-1/3 bg-accent" />

@@ -11,7 +11,7 @@ export const Route = createFileRoute('/')({
 })
 
 /** Mobile search bar from the mobile home frame. */
-function MobileSearch({ initial }: { initial: string }) {
+function MobileSearch({ initial, onOpenFilters }: { initial: string; onOpenFilters: () => void }) {
   const navigate = useNavigate({ from: '/' })
   const [term, setTerm] = useState(initial)
   const submit = (event: FormEvent) => {
@@ -31,25 +31,27 @@ function MobileSearch({ initial }: { initial: string }) {
           className="min-w-0 flex-1 bg-transparent placeholder:text-muted-foreground focus:outline-none"
         />
       </label>
-      <a
-        href="#mercado"
-        aria-label="Ir para filtros"
-        className="flex size-[45px] items-center justify-center rounded-[10px] bg-primary text-primary-foreground"
+      <button
+        type="button"
+        onClick={onOpenFilters}
+        aria-label="Filtros e ordenação"
+        className="flex size-[45px] items-center justify-center rounded-[10px] bg-gradient-to-br from-highlight to-primary text-primary-foreground"
       >
         <SlidersHorizontal aria-hidden className="size-5" />
-      </a>
+      </button>
     </form>
   )
 }
 
 function HomePage() {
   const search = Route.useSearch()
+  const [filtersOpen, setFiltersOpen] = useState(false)
   return (
     <>
       {/* Remounts when the URL query changes (e.g. history navigation). */}
-      <MobileSearch key={search.q ?? ''} initial={search.q ?? ''} />
+      <MobileSearch key={search.q ?? ''} initial={search.q ?? ''} onOpenFilters={() => setFiltersOpen(true)} />
       <Hero />
-      <CatalogSection search={search} />
+      <CatalogSection search={search} filtersOpen={filtersOpen} onFiltersOpenChange={setFiltersOpen} />
       <PromoBanners />
       <Journal />
     </>
