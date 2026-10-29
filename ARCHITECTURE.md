@@ -175,7 +175,7 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 ## Limitações conhecidas
 
 - Não há backend real: sessão em `localStorage` (em produção, cookie httpOnly) e hash de senha feito no navegador.
-- O backend simulado roda na aba. Mutations em andamento são perdidas se a página recarregar antes de o handler responder (cerca de 120ms). Os testes esperam a resposta antes de recarregar.
+- O backend simulado roda na aba. Uma requisição em voo durante uma recarga completa perde o handler: o service worker do MSW, sem a aba para responder, a deixa seguir para o servidor real (404 no console da página que sai). A navegação dentro do app não é afetada. Para não perder dados, as alterações de quantidade pendentes ficam no `sessionStorage` e são reenviadas na próxima carga; os testes esperam a rede assentar antes de recarregar.
 - As baselines visuais foram geradas no Windows (sufixo `-win32`). Em Linux ou CI, rode `npm run test:e2e:update` para gerar as da plataforma.
 - **Lighthouse:** início e detalhe ficam abaixo da meta de performance no perfil mobile simulado (ver README). O LCP mobile das duas é uma imagem que depende da API, e a camada de mocks (MSW + backend simulado) roda antes do primeiro render.
 - Deploy: https://frontend-challenge-ivory-iota.vercel.app (Vercel, `vercel.json` com rewrite de SPA).

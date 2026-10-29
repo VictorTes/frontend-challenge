@@ -143,6 +143,10 @@ test.describe('Regras do servidor simulado', () => {
   test('checkout sem tentativa pendente não consulta pedidos nem gera erros', async ({ page, login }) => {
     await login('alice', '/')
     await addToCart(page, NFT.emerald.id)
+    // Let the cart page's own requests finish: with the mock layer living in the
+    // page, a request still in flight during a full reload escapes to the real
+    // server (404) and would be blamed on the checkout.
+    await page.waitForLoadState('networkidle')
     const orderRequests: string[] = []
     const errors: string[] = []
     page.on('request', (r) => new URL(r.url()).pathname.startsWith('/api/orders') && orderRequests.push(r.url()))
