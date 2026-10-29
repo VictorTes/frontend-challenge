@@ -44,9 +44,12 @@ export function NftImage({ src, alt, sizes, className, priority = false, media }
   const phoneSet = media === 'desktop' ? BLANK : srcSetFor(src, PHONE_WIDTHS)
   const largeSet = media === 'mobile' ? BLANK : srcSetFor(src, LARGE_WIDTHS)
   return (
+    // `contents` keeps the <img> as the parent's flex/grid item; the <source>s are
+    // hidden so they never become items themselves (they would add gaps or take
+    // grid cells). Source selection works on attributes, not on rendering.
     <picture className="contents">
-      {phoneSet && <source media={PHONE} srcSet={phoneSet} sizes={sizes} />}
-      {largeSet && <source media={LARGE} srcSet={largeSet} sizes={sizes} />}
+      {phoneSet && <source media={PHONE} srcSet={phoneSet} sizes={sizes} className="hidden" />}
+      {largeSet && <source media={LARGE} srcSet={largeSet} sizes={sizes} className="hidden" />}
       <img
         ref={(el) => {
           if (el?.complete && el.naturalWidth > 0) setLoaded(true)
