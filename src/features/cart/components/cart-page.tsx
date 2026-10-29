@@ -11,6 +11,7 @@ import type { CartItem, QuoteIssue } from '@/shared/contracts'
 import { compareEth, formatEth, mulEth } from '@/shared/lib/money'
 import { sessionStore } from '@/shared/session/session-store'
 import { Skeleton } from '@/shared/ui/skeleton'
+import { pendingQuantities } from '../pending'
 import { useAcknowledgePrices, useCart, useRemoveCartItem, useUpdateCartItem } from '../hooks'
 import { CouponForm, QuoteTotals } from './summary'
 import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
@@ -49,13 +50,19 @@ function useQuantityDraft(item: CartItem) {
     pending.current = null
     // The session changed (logout, expiry, other user) before the debounce
     // fired: that change belonged to the previous cart, drop it.
-    if (owner !== sessionStore.userId()) return
+    if (owner !== sessionStore.userId()) {
+      pendingQuantities.clear(item.id)
+      return
+    }
     update.mutate(
       { itemId: item.id, quantity },
       {
         onError: (err) => toast.error(ApiError.from(err).message),
         // Drop the draft unless the user already moved on to another value.
-        onSettled: () => setDraft((current) => (current === quantity ? null : current)),
+        onSettled: () => {
+          pendingQuantities.clear(item.id, quantity)
+          setDraft((current) => (current === quantity ? null : current))
+        },
       },
     )
   }
@@ -65,6 +72,7 @@ function useQuantityDraft(item: CartItem) {
     setDraft(quantity)
     if (pending.current) window.clearTimeout(pending.current.timer)
     const owner = sessionStore.userId()
+    pendingQuantities.set(item.id, { owner, quantity })
     pending.current = {
       quantity,
       owner,

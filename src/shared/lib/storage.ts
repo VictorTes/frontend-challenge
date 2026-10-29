@@ -36,4 +36,6 @@ export const storageKeys = {
   checkoutAttempt: (userId: string) => `kurio:checkout-attempt:${userId}`,
   /** Per user: form draft kept when the session expires mid-checkout. */
   checkoutDraft: (userId: string) => `kurio:checkout-draft:${userId}`,
+  /** Cart quantity changes not yet confirmed by the server (survive a reload; per tab). */
+  cartPending: 'kurio:cart-pending',
 }

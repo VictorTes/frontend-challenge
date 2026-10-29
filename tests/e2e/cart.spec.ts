@@ -88,6 +88,21 @@ test.describe('Carrinho', () => {
     await expect(page.locator('[data-sonner-toast][data-type="error"]')).toHaveCount(0)
   })
 
+  test('recarregar logo após mudar a quantidade não perde a alteração @mobile', async ({ page, open }) => {
+    await open('/')
+    await addToCart(page, NFT.emerald.id)
+    const value = item(page, NFT.emerald.id).getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` }).locator('output')
+    const plus = item(page, NFT.emerald.id).getByRole('button', { name: `Aumentar quantidade de ${NFT.emerald.name}` })
+    // Two clicks and an immediate reload, inside the 350ms debounce window.
+    await plus.evaluate((button: HTMLButtonElement) => [0, 1].forEach(() => button.click()))
+    await page.reload()
+    await expect(value).toHaveText('3')
+    await expect(page.getByTestId('quote-subtotal').filter({ visible: true }).first()).toHaveText('3.57 ETH')
+    // Confirmed by the server, not only shown.
+    await page.reload()
+    await expect(value).toHaveText('3')
+  })
+
   test('alteração de quantidade pendente não vaza nem falha ao sair da conta', async ({
     page,
     login,

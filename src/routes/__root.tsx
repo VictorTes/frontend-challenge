@@ -8,6 +8,7 @@ import {
 import { lazy, Suspense, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useSessionRevalidation } from '@/features/auth/hooks'
+import { PendingCartReplay } from '@/features/cart/components/pending-replay'
 import { Footer } from '@/app/layout/footer'
 import { Header } from '@/app/layout/header'
 import { MobileNav } from '@/app/layout/mobile-nav'
@@ -74,6 +75,7 @@ function RootLayout() {
         Pular para o conteúdo
       </a>
       <SessionWatcher />
+      <PendingCartReplay />
       <Header />
       {/* Min height keeps the footer below the fold while content loads (CLS). */}
       <main id="conteudo" tabIndex={-1} className="min-h-dvh outline-none">
