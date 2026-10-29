@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet, useRouter } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useSessionRevalidation } from '@/features/auth/hooks'
 import { Footer } from '@/app/layout/footer'
@@ -8,6 +8,8 @@ import { Header } from '@/app/layout/header'
 import { MobileNav } from '@/app/layout/mobile-nav'
 import { sessionStore } from '@/shared/session/session-store'
 import { Toaster } from '@/shared/ui/sonner'
+
+const MockPanel = import.meta.env.VITE_ENABLE_MOCKS === 'true' ? lazy(() => import('@/app/mock-panel')) : null
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   component: RootLayout,
@@ -55,6 +57,11 @@ function RootLayout() {
       <Footer />
       <MobileNav />
       <Toaster />
+      {MockPanel && (
+        <Suspense fallback={null}>
+          <MockPanel />
+        </Suspense>
+      )}
     </>
   )
 }
