@@ -81,13 +81,22 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
             RARO
           </span>
         )}
-        <Link to="/nfts/$nftId" params={{ nftId: nft.id }} tabIndex={-1} aria-hidden>
+        <Link
+          to="/nfts/$nftId"
+          params={{ nftId: nft.id }}
+          tabIndex={-1}
+          aria-hidden
+          className="block overflow-hidden rounded-[15px]"
+        >
           <NftImage
             src={nft.imageUrl}
             alt=""
             sizes="(min-width: 1024px) 236px, (min-width: 768px) 30vw, 45vw"
             priority={priority}
-            className={cn('rounded-[15px]', soldOut && 'opacity-60')}
+            className={cn(
+              'rounded-[15px] ease-out group-hover:scale-[1.04]',
+              soldOut && 'opacity-60',
+            )}
           />
         </Link>
         {soldOut && (

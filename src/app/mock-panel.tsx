@@ -92,9 +92,11 @@ export default function MockPanel() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Abrir painel de cenários de mock"
-          className="flex size-10 items-center justify-center rounded-full border border-primary bg-card text-highlight shadow-lg hover:bg-accent"
+          // Mobile: an edge tab (24px visible, inside the 28px page gutter) so it
+          // never covers content; fully visible on keyboard focus.
+          className="flex size-12 -translate-x-1/2 items-center justify-end rounded-full border border-primary bg-card pr-1 text-highlight shadow-lg transition-transform hover:bg-accent focus-visible:translate-x-2 md:size-10 md:translate-x-0 md:justify-center md:pr-0"
         >
-          <FlaskConical aria-hidden className="size-5" />
+          <FlaskConical aria-hidden className="size-4 md:size-5" />
         </button>
       )}
     </div>

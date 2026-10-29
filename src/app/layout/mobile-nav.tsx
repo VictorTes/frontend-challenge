@@ -15,10 +15,15 @@ export function MobileNav() {
   const searchButton = useRef<HTMLButtonElement>(null)
   // Like the mobile frames: detail, cart, payment and auth screens have their own
   // back button / bottom bar instead of the tab bar.
-  const hidden = ['/nfts/', '/cart', '/checkout', '/login', '/register'].some((p) => pathname.startsWith(p))
+  const hidden = ['/nfts/', '/cart', '/checkout', '/login', '/register'].some((p) =>
+    pathname.startsWith(p),
+  )
   if (hidden) return null
   const item = (active: boolean) =>
-    cn('flex size-12 items-center justify-center rounded-full', active ? 'text-highlight' : 'text-muted-foreground')
+    cn(
+      'flex size-12 items-center justify-center rounded-full',
+      active ? 'text-highlight' : 'text-muted-foreground',
+    )
 
   return (
     <>
@@ -28,7 +33,12 @@ export function MobileNav() {
       >
         <ul className="flex h-[72px] items-center justify-around px-4">
           <li>
-            <Link to="/" aria-label="Início" aria-current={pathname === '/' ? 'page' : undefined} className={item(pathname === '/')}>
+            <Link
+              to="/"
+              aria-label="Início"
+              aria-current={pathname === '/' ? 'page' : undefined}
+              className={item(pathname === '/')}
+            >
               <Home aria-hidden className="size-6" />
             </Link>
           </li>
@@ -53,10 +63,18 @@ export function MobileNav() {
             </button>
           </li>
           <li>
-            <Link to="/cart" aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`} className={cn(item(pathname === '/cart'), 'relative')}>
+            <Link
+              to="/cart"
+              aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`}
+              className={cn(item(pathname === '/cart'), 'relative')}
+            >
               <ShoppingCart aria-hidden className="size-6" />
               {count > 0 && (
-                <span aria-hidden className="absolute top-1 right-0.5 flex size-[18px] items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                <span
+                  key={count}
+                  aria-hidden
+                  className="absolute top-1 right-0.5 animate-in duration-300 zoom-in-50 flex size-[18px] items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"
+                >
                   {count > 99 ? '99+' : count}
                 </span>
               )}
@@ -66,7 +84,9 @@ export function MobileNav() {
             <Link
               to={session ? '/account/profile' : '/login'}
               aria-label={session ? 'Meu perfil' : 'Entrar'}
-              className={item(pathname.startsWith('/account') && !pathname.startsWith('/account/favorites'))}
+              className={item(
+                pathname.startsWith('/account') && !pathname.startsWith('/account/favorites'),
+              )}
             >
               <User aria-hidden className="size-6" />
             </Link>

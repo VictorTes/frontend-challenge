@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -139,5 +140,16 @@
 @media (max-width: 600px) {
   [data-sonner-toaster] {
     width: auto !important;
+  }
+}
+
+/* Press feedback on buttons (the `scale` property, so it never fights the
+   `translate` utilities). Instant under reduced motion via the global rule. */
+@layer base {
+  button {
+    transition: scale 120ms ease-out;
+  }
+  button:not(:disabled):active {
+    scale: 0.97;
   }
 }

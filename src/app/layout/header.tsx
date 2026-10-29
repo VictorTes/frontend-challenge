@@ -22,21 +22,45 @@ const MARKET_PATHS = ['/nfts', '/cart', '/checkout', '/orders']
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn('mt-2 text-sm leading-[18px] font-bold tracking-[0.1em] text-foreground', className)} aria-label="Kurio, página inicial">
+    <Link
+      to="/"
+      className={cn(
+        'mt-2 text-sm leading-[18px] font-bold tracking-[0.1em] text-foreground',
+        className,
+      )}
+      aria-label="Kurio, página inicial"
+    >
       KURIO
     </Link>
   )
 }
 
-function NavItem({ label, active, to, onClick }: { label: string; active?: boolean; to?: string; onClick?: () => void }) {
+function NavItem({
+  label,
+  active,
+  to,
+  onClick,
+}: {
+  label: string
+  active?: boolean
+  to?: string
+  onClick?: () => void
+}) {
   const className = cn(
     // Figma: 16/21, active bold #e89b55 with a 3px #d28a4c underline on the header divider.
     'relative h-[45px] text-base leading-[21px] transition-colors hover:text-highlight',
-    active ? 'font-bold text-highlight after:absolute after:inset-x-0 after:bottom-[-1.5px] after:h-[3px] after:bg-primary' : 'text-foreground',
+    active
+      ? 'font-bold text-highlight after:absolute after:inset-x-0 after:bottom-[-1.5px] after:h-[3px] after:bg-primary'
+      : 'text-foreground',
   )
   if (to) {
     return (
-      <Link to={to} hash={to === '/' && label === 'Mercado' ? 'mercado' : undefined} className={className} aria-current={active ? 'page' : undefined}>
+      <Link
+        to={to}
+        hash={to === '/' && label === 'Mercado' ? 'mercado' : undefined}
+        className={className}
+        aria-current={active ? 'page' : undefined}
+      >
         {label}
       </Link>
     )
@@ -76,7 +100,9 @@ export function SearchDialog({
         }}
       >
         <DialogTitle>Buscar NFTs</DialogTitle>
-        <DialogDescription className="text-muted-foreground">Pesquise por nome, coleção ou ID do token.</DialogDescription>
+        <DialogDescription className="text-muted-foreground">
+          Pesquise por nome, coleção ou ID do token.
+        </DialogDescription>
         <form onSubmit={submit} role="search" className="flex gap-2">
           <Input
             autoFocus
@@ -86,7 +112,10 @@ export function SearchDialog({
             value={term}
             onChange={(e) => setTerm(e.target.value)}
           />
-          <button type="submit" className="rounded-[4px] bg-primary px-4 font-bold text-primary-foreground hover:bg-highlight">
+          <button
+            type="submit"
+            className="rounded-[4px] bg-primary px-4 font-bold text-primary-foreground hover:bg-highlight"
+          >
             Buscar
           </button>
         </form>
@@ -128,13 +157,27 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-7">
           <ConnectionBadge />
-          <button ref={searchButton} type="button" aria-label="Buscar" onClick={() => setSearchOpen(true)} className="mt-[8px] rounded hover:text-highlight">
+          <button
+            ref={searchButton}
+            type="button"
+            aria-label="Buscar"
+            onClick={() => setSearchOpen(true)}
+            className="mt-[8px] rounded hover:text-highlight"
+          >
             <Search aria-hidden className="size-5" strokeWidth={2.2} />
           </button>
-          <Link to="/cart" aria-label={`Carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`} className="relative mt-[6px] rounded hover:text-highlight">
+          <Link
+            to="/cart"
+            aria-label={`Carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`}
+            className="relative mt-[6px] rounded hover:text-highlight"
+          >
             <ShoppingCart aria-hidden className="size-6" strokeWidth={1.8} />
             {cartCount > 0 && (
-              <span aria-hidden className="absolute -top-0 -right-[7px] flex size-4 items-center justify-center rounded-full border-2 border-background bg-primary text-[10px] leading-[13px] font-medium text-primary-foreground">
+              <span
+                key={cartCount}
+                aria-hidden
+                className="absolute -top-0 -right-[7px] animate-in duration-300 zoom-in-50 flex size-4 items-center justify-center rounded-full border-2 border-background bg-primary text-[10px] leading-[13px] font-medium text-primary-foreground"
+              >
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
@@ -143,14 +186,20 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex h-[35px] items-center gap-2 rounded-[6px] border border-primary px-3 text-highlight hover:bg-primary/10">
                 {session.user.avatarUrl ? (
-                  <img src={session.user.avatarUrl} alt="" className="size-6 rounded-full object-cover" />
+                  <img
+                    src={session.user.avatarUrl}
+                    alt=""
+                    className="size-6 rounded-full object-cover"
+                  />
                 ) : (
                   <User aria-hidden className="size-5" />
                 )}
                 <span className="max-w-32 truncate">{session.user.username}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 border-border bg-card">
-                <DropdownMenuLabel className="truncate text-muted-foreground">{session.user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel className="truncate text-muted-foreground">
+                  {session.user.email}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => navigate({ to: '/account/profile' })}>
                   <User aria-hidden /> Meu perfil
