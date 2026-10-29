@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import {
   FacebookIcon,
@@ -6,6 +7,7 @@ import {
   TwitterIcon,
   YoutubeIcon,
 } from '@/shared/components/brand-icons'
+import { collectionLabels, type CollectionSlug } from '@/shared/contracts'
 import { notAvailable } from './out-of-scope'
 
 const FEATURES = [
@@ -26,10 +28,25 @@ const FEATURES = [
   },
 ]
 
-const COLUMNS: { title: string; links: string[] }[] = [
+/**
+ * Footer entries that exist in the app navigate; the rest (editorial, support,
+ * activity) are out of scope and say so via `notAvailable`.
+ */
+type FooterLink =
+  | string
+  | { label: string; to: '/account/profile' | '/account/favorites' }
+  | { label: string; collection: CollectionSlug }
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Meu perfil',
-    links: ['Meu perfil', 'Minha coleção', 'Atividade', 'Estúdio do criador', 'Lista de interesse'],
+    links: [
+      { label: 'Meu perfil', to: '/account/profile' },
+      'Minha coleção',
+      'Atividade',
+      'Estúdio do criador',
+      { label: 'Lista de interesse', to: '/account/favorites' },
+    ],
   },
   {
     title: 'Central de ajuda',
@@ -41,7 +58,15 @@ const COLUMNS: { title: string; links: string[] }[] = [
       'Denunciar item',
     ],
   },
-  { title: 'Coleções', links: ['Arte digital', 'Fotografia', 'Música', 'Arte 3D', 'Utilidade'] },
+  {
+    title: 'Coleções',
+    links: (['arte-digital', 'fotografia', 'musica', 'arte-3d', 'utilidade'] as const).map(
+      (collection) => ({
+        label: collectionLabels[collection],
+        collection,
+      }),
+    ),
+  },
 ]
 
 const SOCIAL = [
@@ -137,14 +162,29 @@ export function Footer() {
             <h2 className="text-lg leading-4 font-bold">{col.title}</h2>
             <ul className="text-sm leading-[30px]">
               {col.links.map((link) => (
-                <li key={link}>
-                  <button
-                    type="button"
-                    onClick={() => notAvailable(link)}
-                    className="text-left hover:text-highlight"
-                  >
-                    {link}
-                  </button>
+                <li key={typeof link === 'string' ? link : link.label}>
+                  {typeof link === 'string' ? (
+                    <button
+                      type="button"
+                      onClick={() => notAvailable(link)}
+                      className="text-left hover:text-highlight"
+                    >
+                      {link}
+                    </button>
+                  ) : 'to' in link ? (
+                    <Link to={link.to} className="hover:text-highlight">
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/"
+                      search={{ collection: [link.collection] }}
+                      hash="mercado"
+                      className="hover:text-highlight"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

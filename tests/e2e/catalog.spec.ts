@@ -89,4 +89,19 @@ test.describe('Catálogo', () => {
     await open('/?tab=new')
     await expect.poll(() => cardNames(page)).toEqual(names)
   })
+
+  test('links do rodapé levam a funcionalidades existentes; os demais avisam que estão fora do escopo', async ({ page, open }) => {
+    await open('/cart')
+    const footer = page.getByRole('contentinfo')
+    await footer.getByRole('link', { name: 'Fotografia' }).click()
+    await expect(page).toHaveURL(/collection=.*fotografia/)
+    await expect(page.getByRole('button', { name: 'Remover filtro Fotografia' })).toBeVisible()
+
+    await footer.getByRole('button', { name: 'Atividade' }).click()
+    await expect(page.getByText('Atividade não está disponível nesta demonstração.')).toBeVisible()
+
+    // Private destination: the visitor is sent to log in first.
+    await footer.getByRole('link', { name: 'Meu perfil' }).click()
+    await expect(page).toHaveURL(/\/login\?redirect=%2Faccount%2Fprofile/)
+  })
 })
