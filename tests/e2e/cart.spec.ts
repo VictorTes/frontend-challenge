@@ -146,6 +146,22 @@ test.describe('Carrinho', () => {
     await expect(page.locator('[data-sonner-toast][data-type="error"]')).toHaveCount(0)
   })
 
+  test('"Conectar e finalizar" segue funcionando durante a atualização da cotação em segundo plano', async ({ page, open, mock }) => {
+    await open('/')
+    await addToCart(page, NFT.emerald.id)
+    const cta = page.getByRole('button', { name: 'Conectar e finalizar' })
+    await expect(cta).toBeEnabled()
+    // A realtime change on another edition of the same NFT re-quotes the cart
+    // (slowly); the buyer's line is unaffected, so the button stays usable.
+    await mock.setScenario('slow')
+    await mock.setEdition(NFT.emerald.id, 'emerald-ape-042-1of10', { available: 3 })
+    await expect(page.getByTestId('quote-totals').first()).toHaveAttribute('aria-busy', 'true')
+    // Checked right away (no auto-wait): the refetch takes ~2.5s here.
+    expect(await cta.isEnabled()).toBe(true)
+    await cta.click({ timeout: 1_000 })
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fcheckout/)
+  })
+
   test('cupom válido, inválido, expirado e remoção', async ({ page, open }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id, 2)

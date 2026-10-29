@@ -225,8 +225,10 @@ export function CartPage() {
   const priceIssues = issues.filter((i) => i.kind === 'price-changed')
   const stockIssues = issues.filter((i) => i.kind !== 'price-changed')
   // The checkout is blocked until the quote is current and free of issues.
-  const quoteIsCurrent =
-    quote.data && cart && quote.data.cartVersion === cart.version && !quote.isFetching
+  // A background refetch (focus, coupon, realtime) must not flicker the button
+  // into a dead state: the quote only has to match the cart version, since the
+  // checkout re-quotes and the server revalidates everything before confirming.
+  const quoteIsCurrent = quote.data && cart && quote.data.cartVersion === cart.version
   const canCheckout = Boolean(quoteIsCurrent && issues.length === 0)
 
   return (
