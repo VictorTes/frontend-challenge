@@ -121,6 +121,8 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 - **Projetos:**
   - `chromium-desktop` (1440×900): todos os testes.
   - `chromium-mobile` (390×844, Pixel 7): fluxos principais marcados com `@mobile`.
+  - `chromium-tablet` (768×1024): os mesmos fluxos `@mobile`, sem regressão visual.
+- **Contra o deploy:** `BASE_URL=https://<seu-app>.vercel.app npm run test:e2e` usa a URL publicada em vez de subir o `vite preview` local.
 - O REST passa pelos handlers MSW, e o tempo real passa pelo `socket.io-client` (eventos disparados no servidor simulado pela API de controle).
 - Relógio controlado com `page.clock` (timeout do pedido); latência e falhas vêm dos cenários; traces só em falha (`test-results/`).
 
@@ -137,9 +139,10 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `realtime.spec.ts` | 9 e 10: preço muda no carrinho e no checkout, 409 no envio, duplicados e antigos, reconexão, pedido pendente |
 | `a11y.spec.ts` | 11: axe (WCAG 2.1 AA, sem violações graves), teclado, foco de diálogos, validação |
 | `loading.spec.ts` | 12: skeletons, erro e nova tentativa, 500, offline |
+| `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 73 testes passando (53 desktop + 20 mobile), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 94 testes passando (58 desktop + 20 mobile + 16 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 

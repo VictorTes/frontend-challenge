@@ -1,7 +1,12 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const PORT = 4173
-const BASE_URL = `http://localhost:${PORT}`
+/**
+ * BASE_URL=https://<deploy>.vercel.app npm run test:e2e runs the suite against a
+ * deployed build instead of starting `vite preview` locally.
+ */
+const REMOTE_URL = process.env.BASE_URL
+const BASE_URL = REMOTE_URL ?? `http://localhost:${PORT}`
 
 /**
  * E2E against the production build (vite preview) with the MSW mock layer
@@ -40,11 +45,20 @@ export default defineConfig({
       grep: /@mobile/,
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
+    {
+      name: 'chromium-tablet',
+      // Same main flows at 768px (filters in a sheet, desktop header). No visual baselines here.
+      grep: /@mobile/,
+      grepInvert: /Regressão visual/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 }, hasTouch: true },
+    },
   ],
-  webServer: {
-    command: 'npm run build && npm run preview',
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: REMOTE_URL
+    ? undefined
+    : {
+        command: 'npm run build && npm run preview',
+        url: BASE_URL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+      },
 })

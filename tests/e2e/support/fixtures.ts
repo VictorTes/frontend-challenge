@@ -101,7 +101,12 @@ export const test = base.extend<Fixtures>({
 
 export { expect }
 
-/** True when running the 390px project. */
+/** True below the md breakpoint (mobile layout: tab bar, sticky purchase bar). */
 export function isMobile(page: Page) {
   return (page.viewportSize()?.width ?? 1440) < 768
+}
+
+/** True below the lg breakpoint, where catalog filters live in a sheet. */
+export function filtersInSheet(page: Page) {
+  return (page.viewportSize()?.width ?? 1440) < 1024
 }

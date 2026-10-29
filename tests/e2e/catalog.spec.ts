@@ -1,14 +1,14 @@
-import { expect, isMobile, test } from './support/fixtures'
+import { expect, filtersInSheet, test } from './support/fixtures'
 
 const grid = (page: import('@playwright/test').Page) => page.getByTestId('catalog-grid')
 const cardNames = (page: import('@playwright/test').Page) => grid(page).locator('article h3').allTextContents()
 
 async function openFilters(page: import('@playwright/test').Page) {
-  if (isMobile(page)) await page.getByRole('button', { name: /Filtros/ }).click()
+  if (filtersInSheet(page)) await page.getByRole('button', { name: /Filtros/ }).click()
 }
 
 async function closeFilters(page: import('@playwright/test').Page) {
-  if (isMobile(page)) await page.keyboard.press('Escape')
+  if (filtersInSheet(page)) await page.keyboard.press('Escape')
 }
 
 test.describe('Catálogo', () => {
@@ -24,7 +24,7 @@ test.describe('Catálogo', () => {
 
     // Combined filters reset pagination
     await openFilters(page)
-    const filters = page.getByRole(isMobile(page) ? 'dialog' : 'complementary', { name: 'Filtros' }).first()
+    const filters = page.getByRole(filtersInSheet(page) ? 'dialog' : 'complementary', { name: 'Filtros' }).first()
     await filters.getByText('Arte digital', { exact: true }).click()
     await expect(page).not.toHaveURL(/page=/)
     await filters.getByText('Ethereum', { exact: true }).click()
