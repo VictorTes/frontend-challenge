@@ -1,7 +1,14 @@
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react'
 import { EmptyState, ErrorState } from '@/shared/components/feedback'
-import { catalogTabs, collectionLabels, networkLabels, sortOptions, type CatalogTab, type SortOption } from '@/shared/contracts'
+import {
+  catalogTabs,
+  collectionLabels,
+  networkLabels,
+  sortOptions,
+  type CatalogTab,
+  type SortOption,
+} from '@/shared/contracts'
 import { cn } from '@/shared/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet'
@@ -38,7 +45,11 @@ type Props = {
   onFiltersOpenChange: (open: boolean) => void
 }
 
-export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFiltersOpen }: Props) {
+export function CatalogSection({
+  search,
+  filtersOpen,
+  onFiltersOpenChange: setFiltersOpen,
+}: Props) {
   const navigate = useNavigate({ from: '/' })
   const query = toCatalogQuery(search)
   const { data, error, isPending, isFetching, isPlaceholderData, refetch } = useCatalog(query)
@@ -48,10 +59,17 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
 
   /** Any filter change resets pagination to page 1. */
   const updateFilters = (patch: Partial<CatalogSearch>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch, page: undefined }), hash: 'mercado', resetScroll: false })
+    navigate({
+      search: (prev) => ({ ...prev, ...patch, page: undefined }),
+      hash: 'mercado',
+      resetScroll: false,
+    })
 
   const goToPage = (next: number) =>
-    navigate({ search: (prev) => ({ ...prev, page: next > 1 ? next : undefined }), hash: 'mercado' })
+    navigate({
+      search: (prev) => ({ ...prev, page: next > 1 ? next : undefined }),
+      hash: 'mercado',
+    })
 
   const activeChips = [
     ...(search.q ? [{ key: 'q', label: `Busca: "${search.q}"`, clear: { q: undefined } }] : []),
@@ -66,16 +84,31 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
       clear: { network: search.network?.filter((x) => x !== n) },
     })),
     ...(search.minPrice || search.maxPrice
-      ? [{ key: 'price', label: `Preço: ${search.minPrice ?? '0'}–${search.maxPrice ?? '∞'} ETH`, clear: { minPrice: undefined, maxPrice: undefined } }]
+      ? [
+          {
+            key: 'price',
+            label: `Preço: ${search.minPrice ?? '0'}–${search.maxPrice ?? '∞'} ETH`,
+            clear: { minPrice: undefined, maxPrice: undefined },
+          },
+        ]
       : []),
   ]
 
   const filters = (prefix: string) => (
-    <CatalogFilters search={search} facets={data?.facets} onChange={updateFilters} idPrefix={prefix} />
+    <CatalogFilters
+      search={search}
+      facets={data?.facets}
+      onChange={updateFilters}
+      idPrefix={prefix}
+    />
   )
 
   return (
-    <section id="mercado" aria-labelledby="catalog-title" className="container-page mt-6 scroll-mt-4 md:mt-24">
+    <section
+      id="mercado"
+      aria-labelledby="catalog-title"
+      className="container-page mt-6 scroll-mt-4 md:mt-24"
+    >
       <h2 id="catalog-title" className="sr-only">
         Catálogo de NFTs
       </h2>
@@ -87,18 +120,46 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
 
         <div className="flex min-w-0 flex-col gap-6 md:gap-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div role="tablist" aria-label="Seleção do catálogo" className="flex gap-4 overflow-x-auto md:gap-5">
+            <div
+              role="tablist"
+              aria-label="Seleção do catálogo"
+              // WAI-ARIA tabs: arrows/Home/End move (and select) like the detail tabs.
+              onKeyDown={(event) => {
+                const index = catalogTabs.indexOf(tab)
+                const next =
+                  event.key === 'ArrowRight'
+                    ? (index + 1) % catalogTabs.length
+                    : event.key === 'ArrowLeft'
+                      ? (index - 1 + catalogTabs.length) % catalogTabs.length
+                      : event.key === 'Home'
+                        ? 0
+                        : event.key === 'End'
+                          ? catalogTabs.length - 1
+                          : -1
+                if (next < 0) return
+                event.preventDefault()
+                const target = catalogTabs[next]!
+                updateFilters({ tab: target === 'all' ? undefined : target })
+                document.getElementById(`catalog-tab-${target}`)?.focus()
+              }}
+              className="flex gap-3.5 overflow-x-auto md:gap-5"
+            >
               {catalogTabs.map((t) => (
                 <button
                   key={t}
+                  id={`catalog-tab-${t}`}
                   type="button"
                   role="tab"
                   aria-selected={tab === t}
+                  tabIndex={tab === t ? 0 : -1}
                   onClick={() => updateFilters({ tab: t === 'all' ? undefined : t })}
                   className={cn(
-                    // Figma: 15/16 medium, active #e89b55 with a 2px #d28a4c underline 6px below.
-                    'shrink-0 border-b-2 pb-[4px] text-[15px] leading-4 font-medium transition',
-                    tab === t ? 'border-primary text-highlight' : 'border-transparent hover:text-highlight',
+                    // Figma: 15/16 medium (14px on phones so the three tabs fit, as in the mobile frame),
+                    // active #e89b55 with a 2px #d28a4c underline 6px below.
+                    'shrink-0 border-b-2 pb-[4px] text-sm leading-4 font-medium transition md:text-[15px]',
+                    tab === t
+                      ? 'border-primary text-highlight'
+                      : 'border-transparent hover:text-highlight',
                   )}
                 >
                   {TAB_LABELS[t]}
@@ -112,24 +173,37 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
                 className="hidden items-center gap-2 rounded-[4px] border border-primary px-3 py-1.5 text-sm text-highlight md:flex lg:hidden"
               >
                 <SlidersHorizontal aria-hidden className="size-4" /> Filtros
-                {activeChips.length > 0 && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{activeChips.length}</span>}
+                {activeChips.length > 0 && (
+                  <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+                    {activeChips.length}
+                  </span>
+                )}
               </button>
               <label htmlFor="catalog-sort" className="hidden text-[15px] leading-5 sm:block">
                 Ordenar por:
               </label>
               <div className="hidden md:block">
-              <Select value={sort} onValueChange={(value) => updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })}>
-                <SelectTrigger id="catalog-sort" aria-label="Ordenar por" className="h-5 w-auto gap-2 border-none bg-transparent px-0 text-[15px] leading-5 shadow-none [&_svg]:text-foreground">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="border-border bg-card">
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {SORT_LABELS[option]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select
+                  value={sort}
+                  onValueChange={(value) =>
+                    updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })
+                  }
+                >
+                  <SelectTrigger
+                    id="catalog-sort"
+                    aria-label="Ordenar por"
+                    className="h-5 w-auto gap-2 border-none bg-transparent px-0 text-[15px] leading-5 shadow-none [&_svg]:text-foreground"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-border bg-card">
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {SORT_LABELS[option]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -152,7 +226,11 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
                 <button
                   type="button"
                   onClick={() =>
-                    navigate({ search: (prev) => ({ tab: prev.tab, sort: prev.sort }), hash: 'mercado', resetScroll: false })
+                    navigate({
+                      search: (prev) => ({ tab: prev.tab, sort: prev.sort }),
+                      hash: 'mercado',
+                      resetScroll: false,
+                    })
                   }
                   className="px-2 py-1 text-xs underline hover:text-highlight"
                 >
@@ -163,13 +241,23 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
           )}
 
           <div aria-live="polite" className="sr-only">
-            {data && !isPlaceholderData ? `${data.total} NFTs encontrados. Página ${data.page} de ${data.totalPages}.` : ''}
+            {data && !isPlaceholderData
+              ? `${data.total} NFTs encontrados. Página ${data.page} de ${data.totalPages}.`
+              : ''}
           </div>
 
           {error && !data ? (
-            <ErrorState error={error} onRetry={() => refetch()} title="Não foi possível carregar o catálogo" />
+            <ErrorState
+              error={error}
+              onRetry={() => refetch()}
+              title="Não foi possível carregar o catálogo"
+            />
           ) : isPending ? (
-            <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]" aria-busy="true" aria-label="Carregando catálogo">
+            <div
+              className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]"
+              aria-busy="true"
+              aria-label="Carregando catálogo"
+            >
               {Array.from({ length: 9 }, (_, i) => (
                 <NftCardSkeleton key={i} />
               ))}
@@ -182,7 +270,12 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
           ) : (
             <>
               {error && (
-                <ErrorState error={error} onRetry={() => refetch()} title="Não foi possível atualizar os resultados" className="py-4" />
+                <ErrorState
+                  error={error}
+                  onRetry={() => refetch()}
+                  title="Não foi possível atualizar os resultados"
+                  className="py-4"
+                />
               )}
               <div
                 data-testid="catalog-grid"
@@ -193,7 +286,9 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
                   isPlaceholderData && 'opacity-60',
                 )}
               >
-                {data?.items.map((nft, i) => <NftCard key={nft.id} nft={nft} priority={i < 3} />)}
+                {data?.items.map((nft, i) => (
+                  <NftCard key={nft.id} nft={nft} priority={i < 3} />
+                ))}
               </div>
             </>
           )}
@@ -228,7 +323,9 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
                         onClick={() => goToPage(p)}
                         className={cn(
                           'flex size-[35px] items-center justify-center rounded-[4px] text-lg leading-4',
-                          p === page ? 'bg-primary font-bold text-primary-foreground' : 'border border-border hover:text-highlight',
+                          p === page
+                            ? 'bg-primary font-bold text-primary-foreground'
+                            : 'border border-border hover:text-highlight',
                         )}
                       >
                         {p}
@@ -254,7 +351,10 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="left" className="w-[320px] overflow-y-auto border-border bg-background p-0">
+        <SheetContent
+          side="left"
+          className="w-[320px] overflow-y-auto border-border bg-background p-0"
+        >
           <SheetTitle className="px-4 pt-5">Filtros</SheetTitle>
           <SheetDescription className="px-4 text-muted-foreground">
             {data ? `${data.total} resultados` : 'Carregando resultados'}
@@ -264,8 +364,16 @@ export function CatalogSection({ search, filtersOpen, onFiltersOpenChange: setFi
             <label htmlFor="catalog-sort-mobile" className="text-lg leading-4 font-bold">
               Ordenar por
             </label>
-            <Select value={sort} onValueChange={(value) => updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })}>
-              <SelectTrigger id="catalog-sort-mobile" className="h-10 w-full rounded-[3px] border-border">
+            <Select
+              value={sort}
+              onValueChange={(value) =>
+                updateFilters({ sort: value === 'recent' ? undefined : (value as SortOption) })
+              }
+            >
+              <SelectTrigger
+                id="catalog-sort-mobile"
+                className="h-10 w-full rounded-[3px] border-border"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-border bg-card">

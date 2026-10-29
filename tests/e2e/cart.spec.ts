@@ -117,6 +117,9 @@ test.describe('Carrinho', () => {
         r.status() >= 400 &&
         failed.push(`${r.status()} ${r.url()}`),
     )
+    await expect(
+      item(page, NFT.emerald.id).getByRole('button', { name: `Aumentar quantidade de ${NFT.emerald.name}` }),
+    ).toBeEnabled()
     // Open the account menu first, then click "+" and "Sair" in the same task:
     // the logout happens inside the 350ms debounce window.
     await page.getByRole('banner').getByRole('button', { name: /alice/ }).click()

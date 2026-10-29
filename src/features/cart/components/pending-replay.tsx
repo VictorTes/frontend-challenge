@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { sessionStore } from '@/shared/session/session-store'
 import { useCart, useUpdateCartItem } from '../hooks'
-import { pendingQuantities } from '../pending'
+import { isUnloading, pendingQuantities } from '../pending'
 
 /**
  * After a reload, re-sends quantity changes the previous page did not get to
@@ -24,7 +24,11 @@ export function PendingCartReplay() {
       }
       update.mutate(
         { itemId, quantity: entry.quantity },
-        { onSettled: () => pendingQuantities.clear(itemId, entry.quantity) },
+        {
+          onSettled: (_cart, error) => {
+            if (!error || !isUnloading()) pendingQuantities.clear(itemId, entry.quantity)
+          },
+        },
       )
     }
   }, [cart, update])

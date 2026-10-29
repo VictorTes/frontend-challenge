@@ -833,7 +833,7 @@ export function CheckoutPage() {
           )}
 
           <fieldset className="mt-4 flex flex-col gap-4 md:mt-3">
-            <legend className="mb-4 text-base leading-4 font-bold md:mb-5 md:w-full md:text-center md:text-[17px]">
+            <legend className="mb-4 text-base leading-4 font-bold md:mb-5 md:text-[17px]">
               Carteira e rede
             </legend>
             {PROVIDER_ORDER.map((provider) => (

@@ -1,6 +1,19 @@
 import { session, storageKeys } from '@/shared/lib/storage'
 
 type Entry = { owner: string | null; quantity: number }
+
+/**
+ * Set while the page unloads. A request still in flight then fails for reasons
+ * that say nothing about the change (the mock layer lives in this page and the
+ * request escapes to the real server), so its pending entry must survive for
+ * the next page load instead of being cleared by that failure.
+ */
+let unloading = false
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => (unloading = true))
+  window.addEventListener('beforeunload', () => (unloading = true))
+}
+export const isUnloading = () => unloading
 type Pending = Record<string, Entry>
 
 /**

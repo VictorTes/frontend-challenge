@@ -35,6 +35,9 @@ function useCartMutation<TVariables>(mutationFn: (variables: TVariables) => Prom
       // A late response from a previous session must not repopulate its
       // private cart after logout or a user switch.
       if (owner !== (sessionStore.userId() ?? 'guest')) return
+      // A cart refetch started before this mutation reached the server (e.g. the
+      // reconnect reconciliation) would land later with the older cart: cancel it.
+      void queryClient.cancelQueries({ queryKey: qk.cart(owner) })
       // Concurrent mutations (two rows at once) may resolve out of order: a
       // response older than the cached cart must not overwrite it.
       queryClient.setQueryData<Cart>(qk.cart(owner), (current) =>

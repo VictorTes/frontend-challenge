@@ -11,7 +11,7 @@ import type { CartItem, QuoteIssue } from '@/shared/contracts'
 import { compareEth, formatEth, mulEth } from '@/shared/lib/money'
 import { sessionStore } from '@/shared/session/session-store'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { pendingQuantities } from '../pending'
+import { isUnloading, pendingQuantities } from '../pending'
 import { useAcknowledgePrices, useCart, useRemoveCartItem, useUpdateCartItem } from '../hooks'
 import { CouponForm, QuoteTotals } from './summary'
 import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
@@ -59,8 +59,10 @@ function useQuantityDraft(item: CartItem) {
       {
         onError: (err) => toast.error(ApiError.from(err).message),
         // Drop the draft unless the user already moved on to another value.
-        onSettled: () => {
-          pendingQuantities.clear(item.id, quantity)
+        onSettled: (_cart, error) => {
+          // Confirmed, or rejected while the page is alive (the toast tells the
+          // user): done. A failure during unload keeps it for the next load.
+          if (!error || !isUnloading()) pendingQuantities.clear(item.id, quantity)
           setDraft((current) => (current === quantity ? null : current))
         },
       },

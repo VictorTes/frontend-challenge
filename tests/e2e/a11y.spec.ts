@@ -90,5 +90,11 @@ test.describe('Acessibilidade', () => {
     await page.keyboard.press('Space')
     await expect(page).toHaveURL(/collection=/)
     await expect(page).not.toHaveURL(/page=/)
+
+    // Catalog tabs follow the arrow-key pattern.
+    await page.getByRole('tab', { name: 'Todos os NFTs' }).focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByRole('tab', { name: 'Novos lançamentos' })).toBeFocused()
+    await expect(page).toHaveURL(/tab=new/)
   })
 })
