@@ -143,7 +143,7 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável, envio repetido (Enter e duplo clique) gera uma requisição |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 107 testes passando (69 desktop + 21 mobile + 17 tablet); também passam contra o deploy da Vercel (`BASE_URL=...`), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 112 testes passando e 2 pulados de propósito (o teste de "Ver mais detalhes" só roda nos viewports mobile); também passam contra o deploy da Vercel (`BASE_URL=...`), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 

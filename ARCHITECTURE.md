@@ -138,6 +138,8 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 ### Intertravamento de ações
 
 - **Envio único:** `disabled={mutation.isPending}` não basta, porque o TanStack Query publica o estado pendente no tick seguinte e um duplo clique passa. `useSingleFlight` e `useLockedSubmit` (`src/shared/hooks/use-locked-submit.ts`) aplicam uma trava síncrona (`useRef`) em login, cadastro, perfil, carteiras, cupom, comprar, adição rápida, remoção, conexão de carteira e aceite de preços. O pedido tem trava própria e chave de idempotência.
+- **Carrinho após recarregar:** alterações de quantidade ainda não confirmadas ficam espelhadas no `sessionStorage` e são reenviadas quando o carrinho carrega de novo (`PendingCartReplay`); a entrada só é removida com a confirmação do servidor ou com um erro com a página ativa (uma falha durante o descarregamento não conta).
+- **Botão "Conectar e finalizar":** não fica desabilitado durante refetch da cotação em segundo plano, só quando a cotação não corresponde à versão do carrinho ou tem pendências.
 - **Quantidade no carrinho:** cada clique altera o número na hora e é aplicado como delta sobre o último valor pedido (cliques no mesmo tick não se perdem). Um único PATCH sai 350ms depois do último clique, e uma alteração pendente é enviada se a linha desmontar. O total oficial continua vindo da cotação do servidor.
 - **Respostas fora de ordem:** mutations do carrinho devolvem o carrinho com `version`, e uma resposta mais antiga que o cache é descartada.
 
@@ -158,7 +160,8 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 - **Edições:** os chips "1/1, 1/10, 1/50, ABERTA" têm preços e estoques próprios. O preço do card é o da edição mais barata com estoque (1/50 no seed, que bate com o Figma, por exemplo Emerald Ape a 1.19 ETH).
 - **Avaliações:** a aba existe com nota e contagem, mas comentários não fazem parte do escopo.
 - **Tablet (768–1279px):** o Figma só tem frames de 1440 e 390. Entre eles, grids e colunas usam proporções do Figma (`minmax(0,311fr)…`, `flex-1`) e as larguras exatas valem a partir de 1280px (`xl`). Os cards promocionais ficam empilhados abaixo de 1024px e o hero reduz título e imagem. Verificado sem overflow horizontal em 390, 768, 1024, 1280 e 1440.
-- **Detalhe mobile:** o frame mobile não tem as abas, a história nem o carrossel de relacionados, e a implementação segue o frame. A barra de compra é `sticky` (e não `fixed`) para não cobrir o rodapé no fim da página.
+- **Detalhe mobile:** o frame mobile não tem as abas, a história, os links de compartilhar nem o carrossel de relacionados. Para o celular não perder informação que o desktop mostra, um botão "Ver mais detalhes" (`aria-expanded`) revela descrição completa, compartilhar e as mesmas abas, e o carrossel "Mais desta coleção" aparece nos dois layouts. A barra de compra é `sticky` (e não `fixed`) para não cobrir o rodapé no fim da página.
+- **Alinhamentos do Figma normalizados:** o arquivo tem desalinhamentos que parecem acidentais e foram corrigidos na implementação: colunas de edições e subtotais "dançando" no recibo; "Total" e "Coinbase Wallet" com recuo diferente no pagamento; cards do catálogo com alturas e topos irregulares; o título "Carteira e rede" centralizado enquanto os demais títulos do pagamento são alinhados à esquerda. As abas do catálogo usam 14px no celular, como no frame mobile, para as três caberem em 390px.
 - **Ícones de marca:** o lucide v1 removeu os ícones de marca, então uso SVGs próprios equivalentes.
 - **Acessibilidade:**
   - Asterisco de obrigatório via CSS (fora do nome acessível).
