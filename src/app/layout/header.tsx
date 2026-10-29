@@ -145,7 +145,7 @@ export function Header() {
   const isMarket = MARKET_PATHS.some((p) => pathname.startsWith(p))
 
   return (
-    <header className="hidden pt-6 md:block">
+    <header className="vt-header hidden pt-6 md:block">
       {/* Figma: nav starts 376px into the 1200px container; actions are right-aligned. */}
       <div className="container-page flex h-[45px] items-start justify-between border-b border-primary/30 lg:grid lg:grid-cols-[376px_1fr_auto]">
         <Logo />

@@ -29,7 +29,7 @@ export function MobileNav() {
     <>
       <nav
         aria-label="Navegação inferior"
-        className="fixed inset-x-0 bottom-0 z-40 rounded-t-[28px] bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.4)] md:hidden"
+        className="vt-mobile-nav fixed inset-x-0 bottom-0 z-40 rounded-t-[28px] bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.4)] md:hidden"
       >
         <ul className="flex h-[72px] items-center justify-around px-4">
           <li>

@@ -50,7 +50,7 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
               </li>
             ))
           : data?.items.map((nft) => (
-              <li key={nft.id} className="w-[180px] shrink-0 snap-start md:w-[219px]">
+              <li key={nft.id} data-vt-card className="w-[180px] shrink-0 snap-start md:w-[219px]">
                 <Link
                   to="/nfts/$nftId"
                   params={{ nftId: nft.id }}

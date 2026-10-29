@@ -59,5 +59,39 @@ test.describe('Detalhe do NFT', () => {
     await expect(page.getByRole('link', { name: /Compartilhar no LinkedIn/ })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Mais desta coleção' })).toBeVisible()
   })
+
+  test('card -> detalhe -> relacionado animam com View Transition, sem erros; filtros não animam', async ({ page, open }) => {
+    await page.addInitScript(() => {
+      const w = window as unknown as { __vt: { calls: number; errors: string[] } }
+      w.__vt = { calls: 0, errors: [] }
+      const start = document.startViewTransition?.bind(document)
+      if (!start) return
+      document.startViewTransition = ((update: ViewTransitionUpdateCallback) => {
+        w.__vt.calls++
+        const transition = start(update)
+        transition.finished.catch((e: unknown) => w.__vt.errors.push(String(e)))
+        return transition
+      }) as typeof document.startViewTransition
+    })
+    const vt = () => page.evaluate(() => (window as unknown as { __vt: { calls: number; errors: string[] } }).__vt)
+    await open('/')
+    const card = page.getByTestId('catalog-grid').locator('article').first()
+    await card.getByRole('link').first().click()
+    await expect(page.getByRole('heading', { level: 1 }).filter({ visible: true })).toBeVisible()
+    // The shared artwork lands on the detail image (one holder of the name).
+    await expect(page.locator('img.vt-hero').filter({ visible: true })).toHaveCount(1)
+    await page.getByRole('region', { name: 'Mais desta coleção' }).getByRole('link').first().click()
+    await expect(page.locator('img.vt-hero').filter({ visible: true })).toHaveCount(1)
+    await expect.poll(async () => (await vt()).calls).toBeGreaterThanOrEqual(2)
+    expect((await vt()).errors).toEqual([])
+
+    await page.goto('/')
+    await expect(page.getByTestId('catalog-grid').locator('article')).toHaveCount(9)
+    await page.waitForLoadState('networkidle')
+    const before = (await vt()).calls
+    await page.getByRole('tab', { name: 'Novos lançamentos' }).click()
+    await expect(page).toHaveURL(/tab=new/)
+    expect((await vt()).calls).toBe(before)
+  })
 })
 

@@ -13,6 +13,7 @@ import { Footer } from '@/app/layout/footer'
 import { isPrivatePath } from '@/app/private-routes'
 import { Header } from '@/app/layout/header'
 import { MobileNav } from '@/app/layout/mobile-nav'
+import { installSharedArtworkTransitions } from '@/shared/lib/motion'
 import { sessionStore } from '@/shared/session/session-store'
 import { Toaster } from '@/shared/ui/sonner'
 
@@ -51,15 +52,35 @@ function SessionWatcher() {
 }
 
 /**
- * Soft fade between pages. Keyed by pathname, so moving between two NFTs also
- * resets per-page state (edition, quantity, gallery); search-param changes such
- * as catalog filters keep the page mounted.
+ * Keyed by pathname, so moving between two NFTs also resets per-page state
+ * (edition, quantity, gallery); search-param changes such as catalog filters
+ * keep the page mounted. The CSS fade is the fallback for browsers without
+ * View Transitions (styles.css turns it off where those run).
  */
 function RouteTransition() {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  useEffect(() => installSharedArtworkTransitions(), [])
   return (
-    <div key={pathname} className="animate-in duration-300 fade-in-0">
+    <div key={pathname} className="route-fade animate-in duration-300 fade-in-0">
       <Outlet />
+    </div>
+  )
+}
+
+/**
+ * Thin progress bar while a navigation is loading (lazy route chunk, guards).
+ * It only shows up after 150ms (CSS delay), so fast navigations stay clean.
+ */
+function NavigationProgress() {
+  const pending = useRouterState({ select: (state) => state.status === 'pending' })
+  if (!pending) return null
+  return (
+    <div
+      role="progressbar"
+      aria-label="Carregando página"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-0.5"
+    >
+      <div className="nav-progress h-full bg-highlight" />
     </div>
   )
 }
@@ -74,6 +95,7 @@ function RootLayout() {
         Pular para o conteúdo
       </a>
       <SessionWatcher />
+      <NavigationProgress />
       <PendingCartReplay />
       <Header />
       {/* Min height keeps the footer below the fold while content loads (CLS). */}

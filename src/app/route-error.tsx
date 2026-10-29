@@ -15,7 +15,11 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
       <ErrorState
         // API errors carry user-facing messages; anything else (a bug) gets a
         // friendly line instead of a technical one.
-        error={error instanceof ApiError ? error : new Error('Ocorreu um erro inesperado ao exibir esta página.')}
+        error={
+          error instanceof ApiError
+            ? error
+            : new Error('Ocorreu um erro inesperado ao exibir esta página.')
+        }
         title="Algo deu errado nesta página"
         onRetry={() => {
           reset()

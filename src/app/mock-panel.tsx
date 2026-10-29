@@ -32,7 +32,8 @@ export default function MockPanel() {
     })
     if (reset) {
       // A reset restores the seed: client storage from the old state is dropped too.
-      for (const key of Object.keys(localStorage)) if (key.startsWith('kurio:')) localStorage.removeItem(key)
+      for (const key of Object.keys(localStorage))
+        if (key.startsWith('kurio:')) localStorage.removeItem(key)
       sessionStorage.clear()
     }
     window.location.assign('/')
@@ -47,7 +48,12 @@ export default function MockPanel() {
         >
           <div className="mb-2 flex items-center justify-between">
             <h2 className="font-bold">Cenários de mock</h2>
-            <button type="button" aria-label="Fechar painel" onClick={() => setOpen(false)} className="rounded p-1 hover:bg-accent">
+            <button
+              type="button"
+              aria-label="Fechar painel"
+              onClick={() => setOpen(false)}
+              className="rounded p-1 hover:bg-accent"
+            >
               <X aria-hidden className="size-4" />
             </button>
           </div>
@@ -60,13 +66,18 @@ export default function MockPanel() {
                 {Object.entries(state.available)
                   .filter(([name]) => name !== 'default')
                   .map(([name, description]) => (
-                    <label key={name} className="flex items-start gap-2 rounded px-1 py-1 hover:bg-accent/50">
+                    <label
+                      key={name}
+                      className="flex items-start gap-2 rounded px-1 py-1 hover:bg-accent/50"
+                    >
                       <input
                         type="checkbox"
                         className="mt-0.5 accent-[var(--primary)]"
                         checked={selected.includes(name)}
                         onChange={(e) =>
-                          setSelected((s) => (e.target.checked ? [...s, name] : s.filter((n) => n !== name)))
+                          setSelected((s) =>
+                            e.target.checked ? [...s, name] : s.filter((n) => n !== name),
+                          )
                         }
                       />
                       <span>
@@ -77,10 +88,18 @@ export default function MockPanel() {
                   ))}
               </fieldset>
               <div className="mt-3 flex gap-2">
-                <button type="button" onClick={() => apply(false)} className="flex-1 rounded-[4px] bg-primary px-3 py-1.5 font-bold text-primary-foreground">
+                <button
+                  type="button"
+                  onClick={() => apply(false)}
+                  className="flex-1 rounded-[4px] bg-primary px-3 py-1.5 font-bold text-primary-foreground"
+                >
                   Aplicar
                 </button>
-                <button type="button" onClick={() => apply(true)} className="flex-1 rounded-[4px] border border-primary px-3 py-1.5 text-highlight">
+                <button
+                  type="button"
+                  onClick={() => apply(true)}
+                  className="flex-1 rounded-[4px] border border-primary px-3 py-1.5 text-highlight"
+                >
                   Resetar dados
                 </button>
               </div>

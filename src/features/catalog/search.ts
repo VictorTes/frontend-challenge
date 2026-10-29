@@ -1,5 +1,12 @@
 import { z } from 'zod'
-import { catalogTabs, collections, ethString, networks, sortOptions, type CatalogQuery } from '@/shared/contracts'
+import {
+  catalogTabs,
+  collections,
+  ethString,
+  networks,
+  sortOptions,
+  type CatalogQuery,
+} from '@/shared/contracts'
 
 /**
  * Catalog state lives in the URL. Invalid values are dropped (`.catch`) instead

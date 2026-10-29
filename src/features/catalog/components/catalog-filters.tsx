@@ -61,9 +61,17 @@ function FacetList<T extends string>({
               checked ? 'text-highlight' : 'text-muted-foreground',
             )}
           >
-            <input type="checkbox" className="sr-only" checked={checked} onChange={() => onToggle(value)} />
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={checked}
+              onChange={() => onToggle(value)}
+            />
             <span>{labels[value]}</span>
-            <span className={cn(boldCount && 'font-bold')} aria-label={`${counts.get(value) ?? 0} resultados`}>
+            <span
+              className={cn(boldCount && 'font-bold')}
+              aria-label={`${counts.get(value) ?? 0} resultados`}
+            >
               ({counts.get(value) ?? 0})
             </span>
           </label>

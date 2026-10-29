@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { notAvailable } from '@/app/layout/out-of-scope'
 import { NftImage } from '@/shared/components/nft-image'
 import type { NftSummary } from '@/shared/contracts'
+import { smoothScrollTo } from '@/shared/lib/motion'
 import { cn } from '@/shared/lib/utils'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useFeatured } from '../hooks'
@@ -69,6 +70,7 @@ export function Hero() {
           </p>
           <a
             href="#mercado"
+            onClick={(event) => smoothScrollTo('mercado', event)}
             className="mt-1 inline-flex items-center gap-2 text-[13px] font-bold text-highlight"
           >
             EXPLORAR <ArrowRight aria-hidden className="size-4" />
@@ -128,6 +130,7 @@ export function Hero() {
             </div>
             <a
               href="#mercado"
+              onClick={(event) => smoothScrollTo('mercado', event)}
               className="flex h-10 w-[140px] items-center justify-center rounded-[6px] bg-primary pr-2 text-base leading-5 font-bold text-primary-foreground hover:bg-highlight"
             >
               EXPLORAR
@@ -137,7 +140,7 @@ export function Hero() {
             <Dots count={items.length} active={index} onSelect={setIndex} className="self-end" />
           )}
         </div>
-        <div className="aspect-square w-full">
+        <div data-vt-card className="aspect-square w-full">
           {isPending || !current ? (
             <Skeleton className="size-full rounded-[24px] bg-card" />
           ) : (
@@ -171,6 +174,7 @@ export function FeaturedSideCard() {
     <Link
       to="/nfts/$nftId"
       params={{ nftId: nft.id }}
+      data-vt-card
       className="group flex flex-col gap-4 bg-gradient-to-b from-card to-transparent pt-6 pb-1"
     >
       <span className="flex flex-col gap-4">

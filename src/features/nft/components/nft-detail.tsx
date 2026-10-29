@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
-import { ChevronDown, ChevronLeft, Heart, Mail, Search, ShoppingCart, Star } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Heart, Mail, Search, ShoppingCart, Star, X } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
 import { toast } from 'sonner'
 import { NotFoundPage } from '@/app/not-found'
@@ -15,7 +15,13 @@ import { networkLabels, type Edition, type NftDetail } from '@/shared/contracts'
 import { compareEth, formatEth } from '@/shared/lib/money'
 import { cn } from '@/shared/lib/utils'
 import { useSession } from '@/shared/session/session-store'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/shared/ui/dialog'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { RelatedCarousel } from './related-carousel'
 import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
@@ -285,7 +291,7 @@ function Gallery({
           sizes="(min-width: 1024px) 412px, 308px"
           priority
           media="desktop"
-          className="size-full rounded-[18px]"
+          className="vt-hero size-full rounded-[18px]"
         />
         <button
           type="button"
@@ -297,7 +303,18 @@ function Gallery({
         </button>
       </div>
       <Dialog open={zoom} onOpenChange={setZoom}>
-        <DialogContent className="max-w-[min(92vw,720px)] border-border bg-card p-4">
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-[min(92vw,720px)] border-border bg-card p-4"
+        >
+          {/* The default X sat on the artwork's light background and disappeared:
+              a light chip with a black X reads on any image. */}
+          <DialogClose
+            aria-label="Fechar imagem ampliada"
+            className="absolute top-6 right-6 z-10 flex size-9 items-center justify-center rounded-full bg-white/90 text-black shadow-md transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <X aria-hidden className="size-5" strokeWidth={2.5} />
+          </DialogClose>
           <DialogTitle className="sr-only">{nft.name}</DialogTitle>
           <DialogDescription className="sr-only">Imagem ampliada</DialogDescription>
           <img
@@ -455,7 +472,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
             sizes="calc(100vw - 56px)"
             priority
             media="mobile"
-            className="mt-2 aspect-auto h-[356px] rounded-[24px]"
+            className="vt-hero mt-2 aspect-auto h-[356px] rounded-[24px]"
           />
           <div
             className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center"

@@ -48,7 +48,16 @@ export function FavoriteButton({
   )
 }
 
-export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?: boolean }) {
+export function NftCard({
+  nft,
+  priority = false,
+  index = 0,
+}: {
+  nft: NftSummary
+  priority?: boolean
+  /** Position in the grid: staggers the entrance animation (capped). */
+  index?: number
+}) {
   const addToCart = useAddToCart()
   const queryClient = useQueryClient()
   const exclusive = useSingleFlight()
@@ -73,9 +82,14 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
   }
 
   return (
-    <article className="group flex flex-col gap-3" aria-label={nft.name}>
+    <article
+      data-vt-card
+      aria-label={nft.name}
+      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+      className="group flex animate-in flex-col gap-3 duration-500 fade-in-0 slide-in-from-bottom-2 [animation-fill-mode:both]"
+    >
       {/* Figma: 258×300 card surface, 250px artwork with radius 15. */}
-      <div className="relative bg-card px-1 pt-6 pb-[26px] max-md:rounded-[18px] max-md:px-1.5 max-md:pt-1.5 max-md:pb-6">
+      <div className="relative bg-card px-1 pt-6 pb-[26px] transition-[translate,box-shadow] duration-300 ease-out max-md:rounded-[18px] max-md:px-1.5 max-md:pt-1.5 max-md:pb-6 md:group-hover:-translate-y-1 md:group-hover:shadow-[0_14px_30px_rgba(0,0,0,0.35)]">
         {nft.rare && (
           <span className="absolute top-0 left-0 z-10 flex h-[29px] w-20 items-center justify-center bg-primary text-base leading-4 font-medium text-primary-foreground max-md:rounded-tl-[18px] max-md:h-8 max-md:w-[68px] max-md:text-sm">
             RARO

@@ -153,3 +153,75 @@
     scale: 0.97;
   }
 }
+
+/* ---------- Page transitions (View Transitions API, router defaultViewTransition) ---------- */
+@supports (view-transition-name: none) {
+  /* Browsers with View Transitions use them instead of the route fade fallback. */
+  .route-fade {
+    animation: none !important;
+  }
+}
+/* Header and bottom bar stay put while the page content changes under them. */
+.vt-header {
+  view-transition-name: site-header;
+}
+.vt-mobile-nav {
+  view-transition-name: mobile-nav;
+}
+::view-transition-old(root) {
+  animation: 180ms ease-out both vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both vt-rise-in;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+/* Shared NFT artwork: the clicked card's image morphs into the detail image. */
+.vt-hero {
+  view-transition-name: nft-hero;
+}
+::view-transition-group(nft-hero) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(nft-hero),
+::view-transition-new(nft-hero) {
+  height: 100%;
+  object-fit: cover;
+  overflow: clip;
+  animation-duration: 420ms;
+}
+/* Navigation progress bar (rendered only while a navigation is pending). */
+.nav-progress {
+  width: 0;
+  opacity: 0;
+  animation:
+    nav-progress-show 0s linear 150ms forwards,
+    nav-progress-grow 2.4s cubic-bezier(0.1, 0.7, 0.2, 1) 150ms forwards;
+}
+@keyframes nav-progress-show {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes nav-progress-grow {
+  to {
+    width: 85%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

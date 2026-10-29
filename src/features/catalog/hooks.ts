@@ -10,7 +10,8 @@ export const catalogQueryOptions = (params: CatalogQuery) =>
     queryKey: qk.catalog(params),
     // The AbortSignal cancels superseded requests; the key isolates each
     // parameter set, so a late response can never overwrite a newer one.
-    queryFn: ({ signal }) => api.catalog.list({ ...params, pageSize: CATALOG_PAGE_SIZE }, { signal }),
+    queryFn: ({ signal }) =>
+      api.catalog.list({ ...params, pageSize: CATALOG_PAGE_SIZE }, { signal }),
   })
 
 export function useCatalog(params: CatalogQuery) {
