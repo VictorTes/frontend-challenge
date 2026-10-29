@@ -29,7 +29,7 @@ function Dots({
           aria-pressed={i === active}
           aria-label={`Destaque ${i + 1} de ${count}`}
           onClick={() => onSelect(i)}
-          className="group -mx-1 flex size-6 items-center justify-center"
+          className="group flex size-6 items-center justify-center"
         >
           <span
             className={cn(

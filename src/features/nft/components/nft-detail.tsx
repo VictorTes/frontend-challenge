@@ -322,7 +322,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
             className="mt-2 h-[356px] w-full rounded-[24px] object-cover"
           />
           <div
-            className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center gap-[7px]"
+            className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center"
             role="group"
             aria-label="Galeria"
           >
@@ -333,7 +333,8 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
                 aria-label={`Imagem ${i + 1} de ${nft.images.length}`}
                 aria-pressed={i === activeImage}
                 onClick={() => setActiveImage(i)}
-                className="flex h-6 items-center"
+                // 24px hit area around the 7px dot (WCAG 2.5.8 target size).
+                className="flex h-6 min-w-6 items-center justify-center"
               >
                 <span
                   className={cn(

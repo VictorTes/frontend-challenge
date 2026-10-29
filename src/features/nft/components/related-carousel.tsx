@@ -67,7 +67,7 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
             aria-label={`Ir para o grupo ${i + 1}`}
             aria-pressed={page === i}
             onClick={() => goTo(i)}
-            className="-mx-0.5 flex size-6 items-center justify-center"
+            className="flex size-6 items-center justify-center"
           >
             <span className={cn('size-3 rounded-full border-[1.3px] border-primary', page === i && 'bg-primary')} />
           </button>
