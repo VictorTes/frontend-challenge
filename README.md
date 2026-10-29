@@ -143,7 +143,7 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável, envio repetido (Enter e duplo clique) gera uma requisição |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 105 testes passando (67 desktop + 21 mobile + 17 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 107 testes passando (69 desktop + 21 mobile + 17 tablet); também passam contra o deploy da Vercel (`BASE_URL=...`), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 
@@ -157,12 +157,12 @@ Medianas da última execução (2026-10-29): Lighthouse 13.6.0, HeadlessChrome 1
 
 | Página | Perfil | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Início | mobile | **71** | 100 | 100 | 100 | 4658 ms | 0.014 | 493 ms |
-| Início | desktop | 98 | 100 | 100 | 100 | 1070 ms | 0.005 | 36 ms |
-| Detalhe | mobile | **78** | 100 | 100 | 100 | 4479 ms | 0 | 302 ms |
-| Detalhe | desktop | 99 | 100 | 100 | 100 | 990 ms | 0 | 0 ms |
+| Início | mobile | **69** | 100 | 100 | 100 | 4663 ms | 0.014 | 560 ms |
+| Início | desktop | 98 | 100 | 100 | 100 | 1076 ms | 0.005 | 40 ms |
+| Detalhe | mobile | **77** | 100 | 100 | 100 | 4429 ms | 0 | 344 ms |
+| Detalhe | desktop | 99 | 100 | 100 | 100 | 1014 ms | 0 | 0 ms |
 
-Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (71; execuções entre 69 e 73 ao longo do trabalho) e detalhe (78; execuções 78–79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica entre 98 e 99.
+Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (69; execuções entre 69 e 73 ao longo do trabalho) e detalhe (77; execuções entre 76 e 79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica entre 98 e 99.
 
 **Causas identificadas** (diagnósticos `bootup-time`, `unused-javascript` e `lcp-breakdown` nos JSONs):
 
@@ -175,6 +175,7 @@ Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 
 
 **Otimizações aplicadas** (com efeito medido):
 - `modulepreload` no HTML para os chunks de boot (app e camada de mocks), injetado pelo plugin `preloadBootChunks` do `vite.config.ts`. Sem ele, os imports dinâmicos do `main.tsx` só eram descobertos depois do `index.js` executar. LCP observado (CPU 4×, 1,6 Mbps, 150 ms RTT, mediana de 5): início 4,26 s → 3,92 s; detalhe 4,27 s → 3,98 s.
+- Imagens por breakpoint (`NftImage`, `<picture>`): celulares recebem 320/480/640 (320 e 480 com qualidade menor, nunca acima de 640 mesmo em telas 3×); tablet e desktop recebem 320/640/960 em qualidade alta. Layouts mobile/desktop renderizados em paralelo não baixam a imagem do layout oculto. Bytes de imagem medidos (celular DPR 2,6): início 156 → 91 KB, detalhe 112 → 27 KB; detalhe desktop 143 → 57 KB. O LCP simulado quase não muda porque o download da imagem já era curto (45–86 ms); o custo está na espera pelo JS e pela API.
 - Áreas de toque de 24×24 px sem sobreposição nos pontos do carrossel e da galeria (`target-size`): accessibility de 97 para 100.
 - App baixado em paralelo ao MSW; Socket.IO carregado sob demanda.
 - `main` com altura mínima: CLS do detalhe desktop passou de 0.136 para 0.
