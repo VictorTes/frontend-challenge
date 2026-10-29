@@ -43,10 +43,10 @@ export async function simulateNetwork(routeKey: string): Promise<Response | unde
   }
   await delay(latencyFor(routeKey))
   if (has('server-error') && FAILING_ROUTES.has(routeKey)) {
-    return apiError(500, 'INTERNAL_ERROR', 'The server failed to process this request.')
+    return apiError(500, 'INTERNAL_ERROR', 'O servidor falhou ao processar a requisição.')
   }
   if (has('flaky') && FAILING_ROUTES.has(routeKey) && hit(`flaky:${routeKey}`) <= 2) {
-    return apiError(503, 'SERVICE_UNAVAILABLE', 'Service temporarily unavailable. Try again.')
+    return apiError(503, 'SERVICE_UNAVAILABLE', 'Serviço temporariamente indisponível. Tente novamente.')
   }
   return undefined
 }

@@ -1,6 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { Heart, Home, ScanSearch, ShoppingCart, User } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useCartCount } from '@/features/cart/hooks'
 import { cn } from '@/shared/lib/utils'
 import { useSession } from '@/shared/session/session-store'
@@ -12,6 +12,7 @@ export function MobileNav() {
   const session = useSession()
   const count = useCartCount()
   const [searchOpen, setSearchOpen] = useState(false)
+  const searchButton = useRef<HTMLButtonElement>(null)
   const item = (active: boolean) =>
     cn('flex size-12 items-center justify-center rounded-full', active ? 'text-highlight' : 'text-muted-foreground')
 
@@ -38,6 +39,7 @@ export function MobileNav() {
           </li>
           <li className="-mt-12">
             <button
+              ref={searchButton}
               type="button"
               aria-label="Buscar NFTs"
               onClick={() => setSearchOpen(true)}
@@ -67,7 +69,7 @@ export function MobileNav() {
           </li>
         </ul>
       </nav>
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} returnFocusRef={searchButton} />
     </>
   )
 }

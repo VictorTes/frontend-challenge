@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { Heart, LogIn, LogOut, Search, ShoppingCart, User, Wallet } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type RefObject } from 'react'
 import { useLogout } from '@/features/auth/hooks'
 import { useCartCount } from '@/features/cart/hooks'
 import { cn } from '@/shared/lib/utils'
@@ -47,7 +47,16 @@ function NavItem({ label, active, to, onClick }: { label: string; active?: boole
   )
 }
 
-export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SearchDialog({
+  open,
+  onOpenChange,
+  returnFocusRef,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Opened without a DialogTrigger, so focus is restored to this element on close. */
+  returnFocusRef: RefObject<HTMLElement | null>
+}) {
   const navigate = useNavigate()
   const [term, setTerm] = useState('')
   const submit = (event: FormEvent) => {
@@ -57,7 +66,14 @@ export function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-border bg-card">
+      <DialogContent
+        className="border-border bg-card"
+        onCloseAutoFocus={(event) => {
+          if (!returnFocusRef.current) return
+          event.preventDefault()
+          returnFocusRef.current.focus()
+        }}
+      >
         <DialogTitle>Buscar NFTs</DialogTitle>
         <DialogDescription className="text-muted-foreground">Pesquise por nome, coleção ou ID do token.</DialogDescription>
         <form onSubmit={submit} role="search" className="flex gap-2">
@@ -95,6 +111,7 @@ export function Header() {
   const logout = useLogout()
   const navigate = useNavigate()
   const [searchOpen, setSearchOpen] = useState(false)
+  const searchButton = useRef<HTMLButtonElement>(null)
   const isMarket = MARKET_PATHS.some((p) => pathname.startsWith(p))
 
   return (
@@ -109,7 +126,7 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-5">
           <ConnectionBadge />
-          <button type="button" aria-label="Buscar" onClick={() => setSearchOpen(true)} className="rounded p-1 hover:text-highlight">
+          <button ref={searchButton} type="button" aria-label="Buscar" onClick={() => setSearchOpen(true)} className="rounded p-1 hover:text-highlight">
             <Search aria-hidden className="size-6" />
           </button>
           <Link to="/cart" aria-label={`Carrinho, ${cartCount} ${cartCount === 1 ? 'item' : 'itens'}`} className="relative rounded p-1 hover:text-highlight">
@@ -163,7 +180,7 @@ export function Header() {
           )}
         </div>
       </div>
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} returnFocusRef={searchButton} />
     </header>
   )
 }

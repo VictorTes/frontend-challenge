@@ -1,10 +1,13 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, ChevronLeft, Loader2, Unplug } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { useCart } from '@/features/cart/hooks'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAcknowledgePrices, useCart } from '@/features/cart/hooks'
 import { CouponForm, QuoteTotals } from '@/features/cart/components/summary'
 import { WalletsBadge } from '@/app/layout/footer'
+import { api } from '@/shared/api/endpoints'
 import { ApiError } from '@/shared/api/errors'
+import { qk } from '@/shared/api/query-keys'
 import { EmptyState, ErrorState, Spinner } from '@/shared/components/feedback'
 import { Field, focusFirstError, issuesToErrors, TextField } from '@/shared/components/form-field'
 import {
@@ -148,6 +151,9 @@ export function CheckoutPage() {
   const [changedFrom, setChangedFrom] = useState<Quote | null>(null)
   const [connected, setConnected] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<ApiError | null>(null)
+  const [accepting, setAccepting] = useState(false)
+  const queryClient = useQueryClient()
+  const acknowledge = useAcknowledgePrices()
 
   // Keep the draft so an expired session can resume checkout after login.
   useEffect(() => sessionStorageArea.set(draftKey, draft), [draftKey, draft])
@@ -179,6 +185,31 @@ export function CheckoutPage() {
   }, [storedAttempt?.orderId, navigate, recoveredOrder.data, userId])
 
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }))
+
+  // The reviewed terms changed (server rejection or realtime update): the
+  // buyer must accept the new values before confirming again.
+  const pendingTerms = changedFrom ? reviewedQuote : reviewIsStale ? liveQuote : null
+  const needsAcceptance = Boolean(changedFrom || reviewIsStale || (reviewedQuote && reviewedQuote.issues.length > 0))
+  const hasStockIssues = Boolean((pendingTerms ?? reviewedQuote)?.issues.some((i) => i.kind !== 'price-changed'))
+
+  /** Accepts current prices on the server, then re-quotes the cart. */
+  const acceptLatest = async () => {
+    setAccepting(true)
+    setSubmitError(null)
+    try {
+      const acknowledged = await acknowledge.mutateAsync()
+      const fresh = await queryClient.fetchQuery({
+        queryKey: qk.quote(userId, draft.network, acknowledged.version),
+        queryFn: () => api.checkout.quote(draft.network),
+      })
+      setReviewedQuote(fresh)
+      setChangedFrom(null)
+    } catch (error) {
+      setSubmitError(ApiError.from(error))
+    } finally {
+      setAccepting(false)
+    }
+  }
 
   const openReview = async (event: FormEvent) => {
     event.preventDefault()
@@ -432,9 +463,20 @@ export function CheckoutPage() {
                   <li key={`${i.itemId}-${i.kind}`}>{i.message}</li>
                 ))}
               </ul>
-              <Link to="/cart" className="underline">
-                Revisar carrinho
-              </Link>
+              {blockingIssues.every((i) => i.kind === 'price-changed') ? (
+                <button
+                  type="button"
+                  onClick={() => acknowledge.mutate(undefined, { onError: (err) => setSubmitError(ApiError.from(err)) })}
+                  disabled={acknowledge.isPending}
+                  className="mt-2 rounded-[4px] bg-primary px-3 py-1.5 font-bold text-primary-foreground disabled:opacity-60"
+                >
+                  Aceitar novos preços
+                </button>
+              ) : (
+                <Link to="/cart" className="underline">
+                  Revisar carrinho
+                </Link>
+              )}
             </div>
           )}
 
@@ -484,20 +526,26 @@ export function CheckoutPage() {
             Confira os itens, a carteira e o total antes de confirmar. Os valores são revalidados pelo servidor.
           </DialogDescription>
 
-          {changedFrom && reviewedQuote && <QuoteChanges before={changedFrom} after={reviewedQuote} />}
-          {reviewIsStale && liveQuote && reviewedQuote && !changedFrom && (
-            <div role="alert" className="flex flex-col gap-2 rounded-[4px] border border-highlight bg-band p-3 text-sm">
-              <QuoteChanges before={reviewedQuote} after={liveQuote} />
-              <button
-                type="button"
-                onClick={() => {
-                  setChangedFrom(null)
-                  setReviewedQuote(liveQuote)
-                }}
-                className="self-start rounded-[4px] bg-primary px-3 py-1.5 font-bold text-primary-foreground"
-              >
-                Usar valores atualizados
-              </button>
+          {needsAcceptance && reviewedQuote && (
+            <div className="flex flex-col gap-2">
+              <QuoteChanges
+                before={changedFrom ?? reviewedQuote}
+                after={changedFrom ? reviewedQuote : (liveQuote ?? reviewedQuote)}
+              />
+              {hasStockIssues ? (
+                <Link to="/cart" className="self-start text-sm text-highlight underline">
+                  Ajustar quantidades no carrinho
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={acceptLatest}
+                  disabled={accepting}
+                  className="self-start rounded-[4px] bg-primary px-3 py-1.5 font-bold text-primary-foreground disabled:opacity-60"
+                >
+                  {accepting ? 'Atualizando…' : 'Aceitar novos valores'}
+                </button>
+              )}
             </div>
           )}
 
@@ -563,15 +611,13 @@ export function CheckoutPage() {
             <button
               type="button"
               onClick={confirm}
-              disabled={!isConnected || placeOrder.isPending || reviewIsStale || !reviewedQuote || reviewedQuote.issues.length > 0}
+              disabled={!isConnected || placeOrder.isPending || needsAcceptance || !reviewedQuote}
               className="h-11 rounded-[4px] bg-primary px-6 font-bold text-primary-foreground hover:bg-highlight disabled:cursor-not-allowed disabled:opacity-50"
             >
               {placeOrder.isPending ? (
                 <Spinner label="Enviando pedido…" className="text-primary-foreground" />
               ) : timedOut ? (
                 'Tentar novamente'
-              ) : changedFrom ? (
-                'Confirmar novos valores'
               ) : (
                 'Confirmar compra'
               )}

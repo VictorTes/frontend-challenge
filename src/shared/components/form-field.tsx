@@ -21,13 +21,12 @@ export function Field({ label, required, error, hint, className, children }: Fie
   const describedBy = [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(' ') || undefined
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <Label htmlFor={id} className="text-[15px] font-normal text-foreground">
+      {/* The asterisk is CSS-only: `required` on the control already conveys it. */}
+      <Label
+        htmlFor={id}
+        className={cn('text-[15px] font-normal text-foreground', required && "after:-ml-1 after:text-destructive after:content-['*']")}
+      >
         {label}
-        {required && (
-          <span aria-hidden className="text-destructive">
-            *
-          </span>
-        )}
       </Label>
       {children({ id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy, required })}
       {hint && !error && (

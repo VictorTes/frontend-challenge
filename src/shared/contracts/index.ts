@@ -311,11 +311,11 @@ export const walletInput = z
     slot: z.enum(walletSlots),
     displayName: displayName,
     nickname: z.string().trim().min(2, 'Informe o apelido da carteira').max(32, 'Máximo de 32 caracteres'),
-    network: z.enum(networks, 'Selecione uma rede'),
+    network: z.enum(networks, 'Escolha a rede da carteira'),
     profileName: z.string().trim().min(2, 'Informe o nome do perfil').max(40, 'Máximo de 40 caracteres'),
     address: z.string().trim().min(1, 'Informe o endereço da carteira'),
     ensOrSecondary: z.string().trim().max(64, 'Máximo de 64 caracteres'),
-    provider: z.enum(walletProviders, 'Selecione um tipo de carteira'),
+    provider: z.enum(walletProviders, 'Escolha o tipo de carteira'),
     referralCode: z
       .string()
       .trim()

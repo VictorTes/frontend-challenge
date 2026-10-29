@@ -49,6 +49,8 @@ export class RealtimeClient {
       auth: token ? { token } : {},
       reconnectionDelay: 500,
       reconnectionDelayMax: 3000,
+      // Give up on a hung connection attempt quickly and retry.
+      timeout: 5000,
     })
     this.socket.on('connect', this.onConnect)
     this.socket.on('disconnect', this.onDisconnect)

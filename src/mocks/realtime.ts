@@ -31,8 +31,15 @@ const realtime = ws.link(`${new URL(SOCKET_URL).origin}/*`)
 export const realtimeHandlers = [
   realtime.addEventListener('connection', (connection) => {
     const { client } = connection
+    // The app may close a socket before the handshake (e.g. React StrictMode
+    // remounting the provider): don't track it.
+    // `socket` exists on the implementation but not on the public protocol type.
+    const raw = (client as unknown as { socket?: WebSocket }).socket
+    if (raw && raw.readyState >= WebSocket.CLOSING) return
     if (blocked) {
-      queueMicrotask(() => client.close(1011, 'unavailable'))
+      // Simulates an unreachable server: the transport opens and drops without
+      // a handshake, so socket.io-client keeps retrying with backoff.
+      setTimeout(() => client.close(1011, 'unavailable'), 50)
       return
     }
     const io = toSocketIo(connection)
