@@ -5,6 +5,7 @@ Solução do desafio frontend ([enunciado original](docs/CHALLENGE.md)): marketp
 - **Stack:** React 19, TypeScript, TanStack Router, TanStack Query, Axios, Socket.IO (`socket.io-client`), Tailwind CSS v4, shadcn/ui (Radix), MSW 2 + `@mswjs/socket.io-binding`, Playwright, Lighthouse, Vite 8 e zod.
 - **Arquitetura, contratos REST/eventos, sessão, carrinho, cache e desvios do Figma:** [ARCHITECTURE.md](ARCHITECTURE.md)
 - **Decisões técnicas:** [DECISIONS.md](DECISIONS.md)
+- **Demo publicada:** https://frontend-challenge-ivory-iota.vercel.app
 
 ## Requisitos
 
@@ -187,7 +188,7 @@ Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 
 
 O `vercel.json` está configurado (build `npm run build`, saída `dist/`, rewrite de SPA para que acesso direto e refresh funcionem, e `mockServiceWorker.js` sem cache). O build de demonstração inclui os mocks e o tempo real.
 
-**Status:** ainda não publicado. O deploy depende de autorização do responsável pelo repositório. Para publicar: `npx vercel --prod` (ou importar o repositório na Vercel).
+**URL pública:** https://frontend-challenge-ivory-iota.vercel.app. Para testar contra ela: `BASE_URL=https://frontend-challenge-ivory-iota.vercel.app npm run test:e2e`.
 
 ## Estrutura
 
