@@ -11,7 +11,7 @@ import { ws } from 'msw'
 import type { NftDetail, RealtimeEvent } from '@/shared/contracts'
 import { db, persist, type OrderRecord } from './db/store'
 
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'wss://realtime.nft.mock'
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'wss://realtime.kurio.mock'
 
 type Connection = {
   userId: string | null
@@ -24,7 +24,9 @@ const eventLog: RealtimeEvent[] = []
 let connectionSeq = 0
 let blocked = false
 
-const realtime = ws.link(`${SOCKET_URL}/*`)
+// socket.io-client connects to <origin>/socket.io/?EIO=4&transport=websocket;
+// MSW strips the "/socket.io/" prefix before matching, so link the origin.
+const realtime = ws.link(`${new URL(SOCKET_URL).origin}/*`)
 
 export const realtimeHandlers = [
   realtime.addEventListener('connection', (connection) => {

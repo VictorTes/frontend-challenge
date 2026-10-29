@@ -50,12 +50,23 @@ export function compareEth(a: EthString, b: EthString): -1 | 0 | 1 {
   return diff === 0n ? 0 : diff > 0n ? 1 : -1
 }
 
-/** Display with up to `maxFractionDigits`, truncating (never rounding up a price). */
-export function formatEth(value: EthString, maxFractionDigits = 4): string {
+/**
+ * Display with 2 to `maxFractionDigits` decimals, truncating extra digits
+ * (a price is never rounded up). Example: "1.19" → "1.19 ETH", "26.846" → "26.846 ETH".
+ */
+export function formatEth(value: EthString, maxFractionDigits = 4, unit = true): string {
+  const negative = value.startsWith('-')
   const [int = '0', frac = ''] = value.replace('-', '').split('.')
-  const shown = frac.slice(0, maxFractionDigits).replace(/0+$/, '')
+  const shown = frac.slice(0, maxFractionDigits).replace(/0+$/, '').padEnd(2, '0')
   const intFormatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  const sign = value.startsWith('-') ? '-' : ''
-  const truncated = frac.length > maxFractionDigits && /[1-9]/.test(frac.slice(maxFractionDigits))
-  return `${sign}${truncated && !shown && int === '0' ? '<0.' + '0'.repeat(maxFractionDigits - 1) + '1' : `${intFormatted}${shown ? `.${shown}` : ''}`} ETH`
+  return `${negative ? '-' : ''}${intFormatted}.${shown}${unit ? ' ETH' : ''}`
+}
+
+/** Centi-ETH integer <-> decimal string, for UI controls such as sliders. */
+export function centiToEth(centi: number): EthString {
+  return fromWei(BigInt(Math.round(centi)) * 10n ** 16n)
+}
+
+export function ethToCenti(value: EthString): number {
+  return Number(toWei(value) / 10n ** 16n)
 }

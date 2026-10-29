@@ -139,7 +139,7 @@ export const catalogHandlers = [
     const nft = findNft(String(params.id))
     if (!nft) return apiError(404, 'NOT_FOUND', 'NFT não encontrado.')
     const related = db()
-      .nfts.filter((n) => n.id !== nft.id && n.collectionName === nft.collectionName)
+      .nfts.filter((n) => n.id !== nft.id && n.collection === nft.collection)
       .slice(0, 10)
       .map(toSummary)
     return HttpResponse.json({ items: related })

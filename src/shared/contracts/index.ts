@@ -85,7 +85,6 @@ export const loginInput = z.object({
 export type LoginInput = z.infer<typeof loginInput>
 
 export const registerInput = z.object({
-  name: displayName,
   username,
   email,
   password: passwordRule,

@@ -22,7 +22,7 @@ export const CART_HEADER = 'x-cart-id'
  * invalid/expired token gets a 401 instead of silently falling back to a
  * guest cart, so the client can handle the expired session.
  */
-function resolveCart(request: Request): { cart: CartRecord } | { response: Response } {
+export function resolveCart(request: Request): { cart: CartRecord } | { response: Response } {
   if (bearer(request)) {
     const auth = authenticate(request)
     if ('response' in auth) return auth

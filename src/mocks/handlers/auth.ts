@@ -28,7 +28,7 @@ export const authHandlers = [
         fieldErrors: fieldErrorsFrom(parsed.error.issues),
       })
     }
-    const { name, username, email, password } = parsed.data
+    const { username, email, password } = parsed.data
     const state = db()
     if (state.users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
       return apiError(409, 'EMAIL_TAKEN', 'Este e-mail já está cadastrado.', {
@@ -44,7 +44,8 @@ export const authHandlers = [
     const user: UserRecord = {
       id: nextId('user'),
       email,
-      name,
+      // The sign-up layout has no name field; the profile can change it later.
+      name: username,
       username,
       ensName: null,
       walletNickname: null,

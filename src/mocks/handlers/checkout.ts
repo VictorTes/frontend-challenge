@@ -12,6 +12,7 @@ import {
   settleOverdueOrders,
 } from '../domain'
 import { toPublicOrder } from '../realtime'
+import { resolveCart } from './cart'
 import { API, apiError, authenticate, fieldErrorsFrom, readJson, simulateNetwork } from '../http'
 import { has, hit } from '../scenarios'
 
@@ -34,11 +35,12 @@ export const checkoutHandlers = [
   http.post(`${API}/quotes`, async ({ request }) => {
     const failure = await simulateNetwork('quote')
     if (failure) return failure
-    const auth = authenticate(request)
-    if ('response' in auth) return auth.response
+    // Guests get quotes for their cart summary; only a user's quote can become an order.
+    const resolved = resolveCart(request)
+    if ('response' in resolved) return resolved.response
     const parsed = quoteInput.safeParse(await readJson(request))
     if (!parsed.success) return apiError(422, 'VALIDATION_ERROR', 'Rede inválida.')
-    const quote = createQuote(findCartForUser(auth.user.id), parsed.data.network, auth.user.id)
+    const quote = createQuote(resolved.cart, parsed.data.network, resolved.cart.ownerId)
     const { cartId: _c, userId: _u, usedByOrderId: _o, ...publicQuote } = quote
     return HttpResponse.json(publicQuote, { status: 201 })
   }),

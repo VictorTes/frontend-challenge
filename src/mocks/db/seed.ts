@@ -50,7 +50,7 @@ const EDITION_TEMPLATES: { name: string; supply: number | null; multiplier: numb
   { name: '1/1', supply: 1, multiplier: 400, maxPerOrder: 1 },
   { name: '1/10', supply: 10, multiplier: 200, maxPerOrder: 3 },
   { name: '1/50', supply: 50, multiplier: 100, maxPerOrder: 10 },
-  { name: 'ABERTA', supply: null, multiplier: 50, maxPerOrder: 20 },
+  { name: 'ABERTA', supply: null, multiplier: 150, maxPerOrder: 20 },
 ]
 
 export const NFT_COUNT = 60
@@ -86,7 +86,11 @@ export function seedNfts(): NftDetail[] {
 
     // 1–4 editions; the layout's flagship NFT shows all four.
     const editionCount = index === 0 ? 4 : 1 + (index % 4)
-    const templates = EDITION_TEMPLATES.slice(4 - editionCount).reverse()
+    // Layout order (1/1, 1/10, 1/50, ABERTA). Every NFT has the "1/50" edition,
+    // whose price is the listed price; larger sets add rarer editions.
+    const EDITION_SETS = [['1/50'], ['1/50', 'ABERTA'], ['1/10', '1/50', 'ABERTA'], ['1/1', '1/10', '1/50', 'ABERTA']]
+    const names = EDITION_SETS[editionCount - 1]!
+    const templates = EDITION_TEMPLATES.filter((t) => names.includes(t.name))
     const editions: Edition[] = templates.map((t, e) => {
       const priceEth = t.name === '1/50' ? basePrice : round2(pct(basePrice, t.multiplier))
       const supply = t.supply
