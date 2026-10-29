@@ -48,7 +48,8 @@ function RootLayout() {
       </a>
       <SessionWatcher />
       <Header />
-      <main id="conteudo" tabIndex={-1} className="outline-none">
+      {/* Min height keeps the footer below the fold while content loads (CLS). */}
+      <main id="conteudo" tabIndex={-1} className="min-h-dvh outline-none">
         <Outlet />
       </main>
       <Footer />

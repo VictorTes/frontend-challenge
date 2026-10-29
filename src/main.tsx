@@ -6,14 +6,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 async function bootstrap() {
+  // The app chunk downloads in parallel with the mock layer; rendering waits
+  // for MSW so the first requests are already intercepted. (socket.io-client
+  // is imported lazily by the realtime provider, after MSW patched WebSocket.)
+  const appModule = import('./app/app')
   // The mock layer is enabled by configuration and also ships in the demo build.
   if (import.meta.env.VITE_ENABLE_MOCKS === 'true') {
     const { startMocks } = await import('./mocks/browser')
     await startMocks()
   }
-  // Imported only after MSW patched WebSocket: engine.io-client captures the
-  // global WebSocket constructor when its module is evaluated.
-  const { App } = await import('./app/app')
+  const { App } = await appModule
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

@@ -9,7 +9,7 @@
  *   the source of truth for anything missed while offline.
  */
 import type { QueryClient } from '@tanstack/react-query'
-import { io, type Socket } from 'socket.io-client'
+import type { io as ioFactory, Socket } from 'socket.io-client'
 import { qk } from '@/shared/api/query-keys'
 import {
   realtimeEvent,
@@ -40,6 +40,7 @@ export class RealtimeClient {
   status: ConnectionStatus = 'connecting'
 
   constructor(
+    io: typeof ioFactory,
     private readonly queryClient: QueryClient,
     private readonly userId: string | null,
     token: string | null,

@@ -50,7 +50,7 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
               </li>
             ))}
       </ul>
-      <div className="mt-4 hidden justify-center gap-2 md:flex">
+      <div className="mt-4 hidden justify-center md:flex">
         {Array.from({ length: PAGES }, (_, i) => (
           <button
             key={i}
@@ -58,8 +58,10 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
             aria-label={`Ir para o grupo ${i + 1}`}
             aria-pressed={page === i}
             onClick={() => goTo(i)}
-            className={cn('size-3 rounded-full border border-highlight', page === i && 'bg-highlight')}
-          />
+            className="flex size-6 items-center justify-center"
+          >
+            <span className={cn('size-3 rounded-full border border-highlight', page === i && 'bg-highlight')} />
+          </button>
         ))}
       </div>
     </section>

@@ -19,19 +19,25 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<ConnectionStatus>('connecting')
 
   useEffect(() => {
-    const client = new RealtimeClient(queryClient, userId, token)
-    const offStatus = client.onStatus(setStatus)
-    const offNotice = client.onNotice((notice) => {
-      if (notice.inCart) {
-        toast.info(`${notice.name} teve preço ou disponibilidade alterados. O resumo do carrinho foi atualizado.`, {
-          id: `nft-changed-${notice.nftId}`,
-        })
-      }
+    let client: RealtimeClient | null = null
+    let disposed = false
+    // Loaded lazily: it keeps socket.io out of the critical path and makes sure
+    // engine.io captures the WebSocket constructor after MSW patched it.
+    void import('socket.io-client').then(({ io }) => {
+      if (disposed) return
+      client = new RealtimeClient(io, queryClient, userId, token)
+      client.onStatus(setStatus)
+      client.onNotice((notice) => {
+        if (notice.inCart) {
+          toast.info(`${notice.name} teve preço ou disponibilidade alterados. O resumo do carrinho foi atualizado.`, {
+            id: `nft-changed-${notice.nftId}`,
+          })
+        }
+      })
     })
     return () => {
-      offStatus()
-      offNotice()
-      client.dispose()
+      disposed = true
+      client?.dispose()
     }
   }, [queryClient, token, userId])
 

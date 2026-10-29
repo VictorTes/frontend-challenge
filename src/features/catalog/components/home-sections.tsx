@@ -10,17 +10,19 @@ import { useFeatured } from '../hooks'
 
 function Dots({ count, active, onSelect }: { count: number; active: number; onSelect: (i: number) => void }) {
   return (
-    <div className="flex gap-2" role="tablist" aria-label="Destaques">
+    <div className="flex" role="group" aria-label="Destaques">
       {Array.from({ length: count }, (_, i) => (
+        // 24px hit area around the 8px dot from the layout (WCAG 2.5.8).
         <button
           key={i}
           type="button"
-          role="tab"
-          aria-selected={i === active}
+          aria-pressed={i === active}
           aria-label={`Destaque ${i + 1} de ${count}`}
           onClick={() => onSelect(i)}
-          className={cn('size-2 rounded-full transition', i === active ? 'bg-highlight' : 'bg-primary/50 hover:bg-primary')}
-        />
+          className="group flex size-6 items-center justify-center"
+        >
+          <span className={cn('size-2 rounded-full transition', i === active ? 'bg-highlight' : 'bg-primary/50 group-hover:bg-primary')} />
+        </button>
       ))}
     </div>
   )
@@ -72,8 +74,10 @@ export function FeaturedSideCard() {
   const nft = data?.items[1] ?? data?.items[0]
   if (!nft) return <Skeleton className="h-[360px] w-full bg-card" />
   return (
-    <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="group flex flex-col gap-2 bg-card pt-4" aria-label={`NFT em destaque: ${nft.name}`}>
-      <span className="px-3 text-2xl font-bold text-highlight">NFT EM DESTAQUE</span>
+    <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="group flex flex-col gap-2 bg-card pt-4">
+      <span className="px-3 text-2xl font-bold text-highlight">
+        NFT EM DESTAQUE<span className="sr-only">: {nft.name}</span>
+      </span>
       <span className="px-8 text-[22px] font-bold">OFERTA LIMITADA</span>
       <NftImage src={nft.imageUrl} alt="" sizes="310px" className="rounded-[18px] transition group-hover:opacity-90" />
     </Link>
