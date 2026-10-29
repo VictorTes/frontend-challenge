@@ -12,6 +12,12 @@ test.describe('Compra', () => {
     await expect(page.getByTestId('quote-total')).toHaveText('2.396 ETH')
 
     const dialog = await reviewAndConnect(page)
+    // The buyer's own purchase lowers the stock; that must not show up as a
+    // "price or availability changed" notice (watched from the click on).
+    const staleNotice = page
+      .getByText(/teve preço ou disponibilidade alterados/)
+      .waitFor({ timeout: 8_000 })
+      .then(() => true, () => false)
     await dialog.getByRole('button', { name: 'Confirmar compra' }).click()
 
     await expect(page).toHaveURL(/\/orders\/order-/)
@@ -21,6 +27,7 @@ test.describe('Compra', () => {
     await expect(page.getByTestId('receipt-total')).toHaveText('2.396 ETH')
     await expect(page.getByTestId('receipt-line')).toHaveCount(1)
     await expect(page.getByTestId('tx-hash')).toHaveText(/^0x/)
+    expect(await staleNotice).toBe(false)
 
     // The receipt is a snapshot: later catalog changes do not alter it.
     await mock.setEdition(NFT.emerald.id, NFT.emerald.edition1of50, { priceEth: '9.99' })

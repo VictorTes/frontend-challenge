@@ -13,6 +13,7 @@ import type { io as ioFactory, Socket } from 'socket.io-client'
 import { qk } from '@/shared/api/query-keys'
 import {
   realtimeEvent,
+  type Cart,
   type CatalogPage,
   type NftDetail,
   type NftSummary,
@@ -21,6 +22,7 @@ import {
   type OrderUpdatedEvent,
   type RealtimeEvent,
 } from '@/shared/contracts'
+import { compareEth } from '@/shared/lib/money'
 
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'wss://realtime.kurio.mock'
 
@@ -108,8 +110,12 @@ export class RealtimeClient {
     void qc.invalidateQueries({ queryKey: qk.catalogAll, refetchType: 'active' })
     void qc.invalidateQueries({ queryKey: ['nft'], refetchType: 'active' })
     void qc.invalidateQueries({ queryKey: qk.cartAll, refetchType: 'active' })
-    void qc.invalidateQueries({ queryKey: qk.quoteAll(this.userId ?? 'guest'), refetchType: 'active' })
-    if (this.userId) void qc.invalidateQueries({ queryKey: qk.orderAll(this.userId), refetchType: 'active' })
+    void qc.invalidateQueries({
+      queryKey: qk.quoteAll(this.userId ?? 'guest'),
+      refetchType: 'active',
+    })
+    if (this.userId)
+      void qc.invalidateQueries({ queryKey: qk.orderAll(this.userId), refetchType: 'active' })
   }
 
   private onEvent = (raw: unknown) => {
@@ -163,15 +169,27 @@ export class RealtimeClient {
     )
 
     // The cart and any open quote are re-priced by the server.
-    const carts = qc.getQueriesData<{ items: { nftId: string; nftName: string }[] }>({ queryKey: qk.cartAll })
-    const cartItem = carts.flatMap(([, c]) => c?.items ?? []).find((i) => i.nftId === nftId)
+    const carts = qc.getQueriesData<Cart>({ queryKey: qk.cartAll })
+    const cartItems = carts.flatMap(([, c]) => c?.items ?? []).filter((i) => i.nftId === nftId)
+    const cartItem = cartItems[0]
+    // Only tell the buyer when their line is affected: another price for the
+    // edition they hold, or less stock than the quantity they chose. (A stock
+    // drop caused by their own purchase, with enough left, is not news.)
+    const affectsCart = cartItems.some((item) => {
+      const update = editions.find((e) => e.id === item.editionId)
+      return Boolean(
+        update &&
+        (compareEth(update.priceEth, item.unitPriceEth) !== 0 || update.available < item.quantity),
+      )
+    })
     if (cartItem) {
       // A price change does not bump the cart version, so quotes are invalidated explicitly.
       void qc.invalidateQueries({ queryKey: qk.cartAll })
       void qc.invalidateQueries({ queryKey: qk.quoteAll(this.userId ?? 'guest') })
     }
     const name = cartItem?.nftName ?? qc.getQueryData<NftDetail>(qk.nft(nftId))?.name ?? 'Um NFT'
-    for (const l of this.noticeListeners) l({ kind: 'nft-changed', nftId, name, inCart: Boolean(cartItem) })
+    for (const l of this.noticeListeners)
+      l({ kind: 'nft-changed', nftId, name, inCart: affectsCart })
   }
 
   private applyOrderUpdated(event: OrderUpdatedEvent) {
