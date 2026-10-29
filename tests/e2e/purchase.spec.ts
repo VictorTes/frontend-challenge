@@ -4,7 +4,8 @@ import { addToCart, reviewAndConnect } from './support/flows'
 test.describe('Compra', () => {
   test('compra completa do catálogo ao recibo confirmado @mobile', async ({ page, login, mock }) => {
     await login('alice', '/')
-    await page.getByRole('link', { name: `Ver detalhes de ${NFT.emerald.name}` }).first().click({ force: true })
+    await page.getByRole('link', { name: NFT.emerald.name, exact: true }).first().click()
+    await expect(page).toHaveURL(`/nfts/${NFT.emerald.id}`)
     await addToCart(page, NFT.emerald.id, 2)
     await page.getByRole('button', { name: 'Conectar e finalizar' }).click()
     await expect(page).toHaveURL('/checkout')

@@ -30,8 +30,8 @@ export function AccountLayout() {
     )
 
   return (
-    <div className="container-page grid gap-7 pt-6 md:pt-8 lg:grid-cols-[310px_1fr]">
-      <nav aria-label="Meu perfil" className="h-fit bg-card pt-4">
+    <div className="container-page grid grid-cols-[minmax(0,1fr)] gap-7 pt-6 md:pt-8 lg:grid-cols-[310px_minmax(0,1fr)]">
+      <nav aria-label="Meu perfil" className="h-fit min-w-0 bg-card pt-4">
         <p className="px-3 pb-2 text-lg font-bold">Meu perfil</p>
         <ul className="flex gap-1 overflow-x-auto lg:block">
           {ITEMS.map((item) => (

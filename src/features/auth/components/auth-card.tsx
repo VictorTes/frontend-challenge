@@ -178,7 +178,7 @@ export function LoginCard({ redirect, expired }: { redirect?: string; expired?: 
       </div>
       <p className="mt-8 text-center text-muted-foreground md:hidden">
         Novo na Kurio?{' '}
-        <Link to="/register" search={{ redirect }} className="text-highlight hover:underline">
+        <Link to="/register" search={{ redirect }} className="text-highlight underline">
           Crie uma conta
         </Link>
       </p>
@@ -242,7 +242,7 @@ export function RegisterCard({ redirect }: { redirect?: string }) {
       </div>
       <p className="mt-8 text-center text-muted-foreground md:hidden">
         Já tem uma conta?{' '}
-        <Link to="/login" search={{ redirect }} className="text-highlight hover:underline">
+        <Link to="/login" search={{ redirect }} className="text-highlight underline">
           Entre
         </Link>
       </p>

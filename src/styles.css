@@ -69,6 +69,13 @@
   html {
     color-scheme: dark;
     -webkit-text-size-adjust: 100%;
+    /* Keeps focused/scrolled-to elements clear of the fixed mobile tab bar (WCAG 2.4.11). */
+    scroll-padding-bottom: 6.5rem;
+  }
+  @media (min-width: 768px) {
+    html {
+      scroll-padding-bottom: 0;
+    }
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
