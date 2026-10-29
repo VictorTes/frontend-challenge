@@ -56,17 +56,8 @@ function useQuantityDraft(item: CartItem) {
     )
   }
 
-  // Clicks dispatched before a re-render all see the same rendered value, so
-  // each one is applied as a delta on top of the latest requested quantity.
   const rendered = draft ?? item.quantity
-  const latest = useRef(rendered)
-  useEffect(() => {
-    latest.current = rendered
-  })
-  const change = (next: number) => {
-    const upper = Math.max(itemMax(item), item.quantity)
-    const quantity = Math.min(upper, Math.max(1, latest.current + (next - rendered)))
-    latest.current = quantity
+  const change = (quantity: number) => {
     setDraft(quantity)
     if (pending.current) window.clearTimeout(pending.current.timer)
     pending.current = {

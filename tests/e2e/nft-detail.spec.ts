@@ -36,4 +36,13 @@ test.describe('Detalhe do NFT', () => {
     await expect(increase).toBeDisabled()
     await expect(page.getByRole('group', { name: 'Quantidade' }).first().locator('output')).toHaveText('3')
   })
+
+  test('cliques no mesmo instante no seletor de quantidade somam todos', async ({ page, open }) => {
+    await open(`/nfts/${NFT.emerald.id}`)
+    const stepper = page.getByRole('group', { name: 'Quantidade' }).locator('visible=true')
+    await stepper.getByRole('button', { name: 'Aumentar quantidade' }).evaluate((button: HTMLButtonElement) => {
+      for (let i = 0; i < 3; i++) button.click()
+    })
+    await expect(stepper.locator('output')).toHaveText('4')
+  })
 })

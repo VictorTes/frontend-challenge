@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { cn } from '@/shared/lib/utils'
 
 type Props = {
@@ -13,7 +14,28 @@ type Props = {
 }
 
 /** − value + control with the layout's copper pill buttons. */
-export function QuantityStepper({ value, min = 1, max, onChange, label, disabled, size = 'md' }: Props) {
+export function QuantityStepper({
+  value,
+  min = 1,
+  max,
+  onChange,
+  label,
+  disabled,
+  size = 'md',
+}: Props) {
+  // Clicks dispatched before a re-render all see the same `value`; stepping
+  // from the last emitted value makes each of them count.
+  const latest = useRef(value)
+  // Every render resyncs with the parent (which may clamp or reject a value).
+  useEffect(() => {
+    latest.current = value
+  })
+  const step = (delta: number) => {
+    const next = Math.min(max, Math.max(min, latest.current + delta))
+    if (next === latest.current) return
+    latest.current = next
+    onChange(next)
+  }
   const button = cn(
     'flex items-center justify-center rounded-full border transition disabled:cursor-not-allowed',
     size === 'circle'
@@ -23,11 +45,15 @@ export function QuantityStepper({ value, min = 1, max, onChange, label, disabled
   )
   const icon = size === 'md' ? 'size-5' : size === 'sm' ? 'size-4' : 'size-3.5'
   return (
-    <div role="group" aria-label={label} className={cn('flex items-center', size === 'circle' ? 'gap-[13px]' : 'gap-3')}>
+    <div
+      role="group"
+      aria-label={label}
+      className={cn('flex items-center', size === 'circle' ? 'gap-[13px]' : 'gap-3')}
+    >
       <button
         type="button"
         className={button}
-        onClick={() => onChange(value - 1)}
+        onClick={() => step(-1)}
         disabled={disabled || value <= min}
         aria-label={`Diminuir ${label.toLowerCase()}`}
       >
@@ -35,14 +61,21 @@ export function QuantityStepper({ value, min = 1, max, onChange, label, disabled
       </button>
       <output
         aria-live="polite"
-        className={cn('min-w-3 text-center', size === 'md' ? 'text-xl leading-7' : size === 'sm' ? 'text-lg leading-[25px] font-medium' : 'text-base leading-[22px]')}
+        className={cn(
+          'min-w-3 text-center',
+          size === 'md'
+            ? 'text-xl leading-7'
+            : size === 'sm'
+              ? 'text-lg leading-[25px] font-medium'
+              : 'text-base leading-[22px]',
+        )}
       >
         {value}
       </output>
       <button
         type="button"
         className={button}
-        onClick={() => onChange(value + 1)}
+        onClick={() => step(1)}
         disabled={disabled || value >= max}
         aria-label={`Aumentar ${label.toLowerCase()}`}
       >
