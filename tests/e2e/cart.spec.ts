@@ -151,7 +151,7 @@ test.describe('Carrinho', () => {
     await expect(page.getByTestId('quote-discount')).toHaveText('(-) 0.238 ETH')
     await expect(page.getByTestId('quote-total')).toHaveText('2.158 ETH')
 
-    await page.getByRole('button', { name: 'Remover', exact: true }).click()
+    await page.getByRole('button', { name: 'Remover código promocional KURIO10' }).click()
     await expect(page.getByTestId('quote-discount')).toHaveText('(-) 0.00 ETH')
   })
 

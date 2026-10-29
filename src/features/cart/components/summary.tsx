@@ -124,6 +124,7 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
             remove.mutate(undefined, { onError: (err) => toast.error(ApiError.from(err).message) })
           }
           disabled={remove.isPending}
+          aria-label={`Remover código promocional ${couponCode}`}
           className="text-sm text-highlight underline disabled:opacity-50"
         >
           Remover
