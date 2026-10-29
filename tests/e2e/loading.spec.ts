@@ -12,6 +12,22 @@ test.describe('Carregamento, falhas e recuperação', () => {
     await expect(page.getByRole('heading', { level: 1, name: NFT.sage.name })).toBeVisible({ timeout: 15_000 })
   })
 
+  test('skeleton tem shimmer e fica estático com movimento reduzido', async ({ page, open }) => {
+    const sweep = () =>
+      page
+        .locator('[data-slot="skeleton"]')
+        .first()
+        .evaluate((el) => getComputedStyle(el, '::after').animationName)
+    await open('/', 'slow')
+    await expect(page.getByLabel('Carregando catálogo')).toBeVisible()
+    expect(await sweep()).toBe('shimmer')
+
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.reload()
+    await expect(page.getByLabel('Carregando catálogo')).toBeVisible()
+    expect(await sweep()).toBe('none')
+  })
+
   test('falha transitória mostra erro e recupera com nova tentativa', async ({ page, open }) => {
     // flaky: the first 2 catalog requests fail with 503 (1 automatic retry).
     await open('/', 'flaky')
