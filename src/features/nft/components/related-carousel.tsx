@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useRelated } from '@/features/catalog/hooks'
+import { NftImage } from '@/shared/components/nft-image'
 import { formatEth } from '@/shared/lib/money'
 import { cn } from '@/shared/lib/utils'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -16,7 +17,10 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
   const goTo = (index: number) => {
     const list = listRef.current
     if (!list) return
-    list.scrollTo({ left: ((list.scrollWidth - list.clientWidth) * index) / (PAGES - 1), behavior: 'smooth' })
+    list.scrollTo({
+      left: ((list.scrollWidth - list.clientWidth) * index) / (PAGES - 1),
+      behavior: 'smooth',
+    })
   }
 
   const onScroll = () => {
@@ -28,10 +32,17 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
   return (
     <section aria-labelledby={`related-${nftId}`} className="mt-16 md:mt-24">
       {/* Figma: 17/16 bold heading, divider at 30%, 219×255 portrait cards, gap 28. */}
-      <h2 id={`related-${nftId}`} className="border-b border-primary/30 pb-3 text-[17px] leading-4 font-bold text-highlight">
+      <h2
+        id={`related-${nftId}`}
+        className="border-b border-primary/30 pb-3 text-[17px] leading-4 font-bold text-highlight"
+      >
         {title}
       </h2>
-      <ul ref={listRef} onScroll={onScroll} className="mt-8 flex snap-x gap-7 overflow-x-auto pb-2 [scrollbar-width:none]">
+      <ul
+        ref={listRef}
+        onScroll={onScroll}
+        className="mt-8 flex snap-x gap-7 overflow-x-auto pb-2 [scrollbar-width:none]"
+      >
         {isPending
           ? Array.from({ length: 5 }, (_, i) => (
               <li key={i} className="w-[180px] shrink-0 md:w-[219px]">
@@ -40,20 +51,26 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
             ))
           : data?.items.map((nft) => (
               <li key={nft.id} className="w-[180px] shrink-0 snap-start md:w-[219px]">
-                <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="group flex flex-col gap-3">
+                <Link
+                  to="/nfts/$nftId"
+                  params={{ nftId: nft.id }}
+                  className="group flex flex-col gap-3"
+                >
                   <div className="aspect-[219/255] bg-card px-[14px] pt-1 pb-2">
-                    <img
+                    <NftImage
                       src={nft.imageUrl}
                       alt=""
-                      width={190}
-                      height={243}
-                      loading="lazy"
-                      className="size-full rounded-[11px] object-cover transition group-hover:opacity-90"
+                      sizes="(min-width: 768px) 190px, 152px"
+                      className="aspect-auto size-full rounded-[11px] group-hover:opacity-90"
                     />
                   </div>
                   <span className="flex flex-col">
-                    <span className="text-[15px] leading-5 group-hover:text-highlight">{nft.name}</span>
-                    <span className="text-base leading-4 font-bold text-highlight">{formatEth(nft.priceEth)}</span>
+                    <span className="text-[15px] leading-5 group-hover:text-highlight">
+                      {nft.name}
+                    </span>
+                    <span className="text-base leading-4 font-bold text-highlight">
+                      {formatEth(nft.priceEth)}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -69,7 +86,12 @@ export function RelatedCarousel({ nftId, title }: { nftId: string; title: string
             onClick={() => goTo(i)}
             className="flex size-6 items-center justify-center"
           >
-            <span className={cn('size-3 rounded-full border-[1.3px] border-primary', page === i && 'bg-primary')} />
+            <span
+              className={cn(
+                'size-3 rounded-full border-[1.3px] border-primary',
+                page === i && 'bg-primary',
+              )}
+            />
           </button>
         ))}
       </div>

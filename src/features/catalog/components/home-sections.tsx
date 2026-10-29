@@ -81,6 +81,7 @@ export function Hero() {
               alt=""
               sizes="140px"
               priority
+              media="mobile"
               className="rounded-[16px]"
             />
           )}
@@ -89,6 +90,7 @@ export function Hero() {
               src={secondary.imageUrl}
               alt=""
               sizes="60px"
+              media="mobile"
               className="absolute bottom-3 left-0 w-[58px] rounded-[10px] border-2 border-card"
             />
           )}
@@ -147,8 +149,9 @@ export function Hero() {
               <NftImage
                 src={current.imageUrl}
                 alt={current.name}
-                sizes="450px"
+                sizes="(min-width: 1280px) 450px, 380px"
                 priority
+                media="desktop"
                 className="rounded-[24px]"
               />
             </Link>
@@ -176,13 +179,12 @@ export function FeaturedSideCard() {
         </span>
         <span className="px-5 text-[22px] leading-4 font-bold">OFERTA LIMITADA</span>
       </span>
-      <img
+      <NftImage
         src={nft.imageUrl}
         alt=""
-        width={310}
-        height={368}
-        loading="lazy"
-        className="h-[368px] w-full rounded-[22px] object-cover transition group-hover:opacity-90"
+        sizes="310px"
+        media="desktop"
+        className="aspect-auto h-[368px] rounded-[22px] group-hover:opacity-90"
       />
     </Link>
   )
@@ -220,13 +222,11 @@ export function PromoBanners() {
             aria-hidden
             className="pointer-events-none absolute -bottom-[118px] -left-[191px] size-64 rounded-full border-2 border-primary"
           />
-          <img
+          <NftImage
             src={promo.image}
             alt=""
-            width={292}
-            height={250}
-            loading="lazy"
-            className="relative h-full w-full rounded-[18px] object-cover"
+            sizes="(min-width: 1024px) 292px, 50vw"
+            className="relative aspect-auto h-full rounded-[18px]"
           />
           {/* Figma: title at 37px, text at 94px, button at 164px; right padding 30. */}
           <div className="flex flex-col items-end pt-[37px] pr-[30px] pb-[46px] pl-1.5 text-right max-md:py-6">
@@ -301,13 +301,11 @@ export function Journal() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {POSTS.map((post) => (
           <article key={post.title} className="flex flex-col overflow-hidden rounded-[8px] bg-card">
-            <img
+            <NftImage
               src={`/assets/nfts/${post.image}-640.webp`}
               alt=""
-              width={282}
-              height={195}
-              loading="lazy"
-              className="h-[195px] w-full object-cover"
+              sizes="(min-width: 1024px) 282px, (min-width: 640px) 50vw, 100vw"
+              className="aspect-auto h-[195px] rounded-none"
             />
             <div className="flex flex-1 flex-col gap-2 px-4 pt-3 pb-4">
               <p className="text-xs leading-4 font-medium text-muted-foreground">

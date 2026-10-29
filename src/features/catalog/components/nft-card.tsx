@@ -91,7 +91,7 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
           <NftImage
             src={nft.imageUrl}
             alt=""
-            sizes="(min-width: 1024px) 236px, (min-width: 768px) 30vw, 45vw"
+            sizes="(min-width: 1024px) 236px, (min-width: 768px) 30vw, calc(50vw - 36px)"
             priority={priority}
             className={cn(
               'rounded-[15px] ease-out group-hover:scale-[1.04]',

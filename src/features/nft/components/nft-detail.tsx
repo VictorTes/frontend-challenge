@@ -117,6 +117,8 @@ function Gallery({
                 alt=""
                 width={100}
                 height={100}
+                // Lazy: not fetched on phones, where the desktop gallery is hidden.
+                loading="lazy"
                 className="size-full object-cover"
               />
             </button>
@@ -127,8 +129,9 @@ function Gallery({
         <NftImage
           src={image}
           alt={nft.name}
-          sizes="412px"
+          sizes="(min-width: 1024px) 412px, 308px"
           priority
+          media="desktop"
           className="size-full rounded-[18px]"
         />
         <button
@@ -315,13 +318,13 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
               />
             </button>
           </div>
-          <img
+          <NftImage
             src={nft.images[activeImage] ?? nft.imageUrl}
             alt={nft.name}
-            width={361}
-            height={356}
-            fetchPriority="high"
-            className="mt-2 h-[356px] w-full rounded-[24px] object-cover"
+            sizes="calc(100vw - 56px)"
+            priority
+            media="mobile"
+            className="mt-2 aspect-auto h-[356px] rounded-[24px]"
           />
           <div
             className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center"

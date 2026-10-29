@@ -17,7 +17,9 @@ const ARTWORK = {
   '9df2ff42': 'ivory',
   '87580f2d': 'golden',
 }
-const WIDTHS = [320, 640, 960]
+const WIDTHS = [320, 480, 640, 960]
+/** Small variants (picked by phones via srcset) trade a little quality for weight. */
+const QUALITY = { 320: 70, 480: 68, 640: 78, 960: 78 }
 const OUT = 'public/assets/nfts'
 
 function token() {
@@ -44,7 +46,7 @@ for (const [ref, url] of Object.entries(meta.images)) {
   const source = Buffer.from(await (await fetch(url)).arrayBuffer())
   for (const width of WIDTHS) {
     const file = `${OUT}/${slug}-${width}.webp`
-    await sharp(source).resize(width, width).webp({ quality: 78 }).toFile(file)
+    await sharp(source).resize(width, width).webp({ quality: QUALITY[width] }).toFile(file)
     console.log('wrote', file)
   }
 }
