@@ -10,3 +10,6 @@ dist
 /playwright/.cache/
 /lighthouse/reports/*.tmp
 .vercel
+
+# Anotações pessoais de estudo (não versionar)
+ANOTACOES.local.md

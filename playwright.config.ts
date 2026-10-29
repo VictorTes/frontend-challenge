@@ -58,7 +58,8 @@ export default defineConfig({
     : {
         command: 'npm run build && npm run preview',
         url: BASE_URL,
-        reuseExistingServer: !process.env.CI,
+        // Always build and serve the current code: a stale server would test an old bundle.
+        reuseExistingServer: false,
         timeout: 180_000,
       },
 })

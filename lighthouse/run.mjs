@@ -6,7 +6,7 @@
  *
  *   npm run lighthouse
  */
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import * as chromeLauncher from 'chrome-launcher'
@@ -125,6 +125,8 @@ try {
   console.log(`\nSummary written to ${OUT}/summary.md`)
 } finally {
   await chrome?.kill()
-  preview.kill()
-  if (process.platform === 'win32' && preview.pid) spawn('taskkill', ['/pid', String(preview.pid), '/T', '/F'], { stdio: 'ignore' })
+  // `vite preview` runs under a shell: kill the whole tree synchronously so no
+  // stale server keeps port 4173 (Playwright would otherwise test an old build).
+  if (process.platform === 'win32' && preview.pid) spawnSync('taskkill', ['/pid', String(preview.pid), '/T', '/F'], { stdio: 'ignore' })
+  else preview.kill()
 }
