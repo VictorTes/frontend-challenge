@@ -91,12 +91,13 @@ export function usePlaceOrder() {
 }
 
 /** Order status: realtime events update the cache; polling is a fallback. */
-export function useOrder(orderId: string) {
+/** `null` = no order to look up (the query stays idle instead of requesting a placeholder id). */
+export function useOrder(orderId: string | null) {
   const userId = useSession()?.user.id
   return useQuery({
-    queryKey: qk.order(userId ?? 'anonymous', orderId),
-    queryFn: ({ signal }) => api.checkout.order(orderId, { signal }),
-    enabled: Boolean(userId),
+    queryKey: qk.order(userId ?? 'anonymous', orderId ?? 'none'),
+    queryFn: ({ signal }) => api.checkout.order(orderId!, { signal }),
+    enabled: Boolean(userId && orderId),
     refetchInterval: (query) => (query.state.data?.status === 'pending' ? 5_000 : false),
   })
 }

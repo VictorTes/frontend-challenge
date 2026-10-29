@@ -139,5 +139,19 @@ test.describe('Regras do servidor simulado', () => {
     await expect(page.getByText('KURIO10').first()).toBeVisible({ timeout: 15_000 })
     expect(coupons()).toBe(1)
   })
+
+  test('checkout sem tentativa pendente não consulta pedidos nem gera erros', async ({ page, login }) => {
+    await login('alice', '/')
+    await addToCart(page, NFT.emerald.id)
+    const orderRequests: string[] = []
+    const errors: string[] = []
+    page.on('request', (r) => new URL(r.url()).pathname.startsWith('/api/orders') && orderRequests.push(r.url()))
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    await page.goto('/checkout')
+    await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true }).first()).toBeEnabled()
+    await page.waitForLoadState('networkidle')
+    expect(orderRequests).toEqual([])
+    expect(errors).toEqual([])
+  })
 })
 

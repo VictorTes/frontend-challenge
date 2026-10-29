@@ -309,7 +309,7 @@ export function CheckoutPage() {
 
   // Recover an attempt left by a refresh or a timed-out request.
   const [storedAttempt, setAttempt] = useState(() => orderAttempts.get(userId))
-  const recoveredOrder = useOrder(storedAttempt?.orderId ?? '__none__')
+  const recoveredOrder = useOrder(storedAttempt?.orderId ?? null)
   const recoveredTerminal = Boolean(
     storedAttempt?.orderId && recoveredOrder.data && recoveredOrder.data.status !== 'pending',
   )
