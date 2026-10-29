@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
-import { ChevronLeft, Heart, Mail, Search, ShoppingCart, Star } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Heart, Mail, Search, ShoppingCart, Star } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
 import { toast } from 'sonner'
 import { NotFoundPage } from '@/app/not-found'
@@ -82,6 +82,159 @@ function EditionPicker({
         })}
       </div>
     </fieldset>
+  )
+}
+
+function ShareLinks({ nft }: { nft: NftDetail }) {
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
+  const shareText = `${nft.name} na Kurio`
+  return (
+    <div className="flex items-center gap-2 text-[15px] leading-4 font-bold">
+      Compartilhar este NFT:
+      <a
+        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Compartilhar no LinkedIn (abre em nova aba)"
+        className="hover:text-highlight"
+      >
+        <LinkedinIcon className="size-[18px]" />
+      </a>
+      <a
+        href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(shareUrl)}`}
+        aria-label="Compartilhar por e-mail"
+        className="hover:text-highlight"
+      >
+        <Mail aria-hidden className="size-[18px]" />
+      </a>
+      <a
+        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Compartilhar no Twitter (abre em nova aba)"
+        className="hover:text-highlight"
+      >
+        <TwitterIcon className="size-[18px]" />
+      </a>
+    </div>
+  )
+}
+
+/** "Detalhes do NFT" / "Avaliações" tabs; `idPrefix` keeps ids unique when both layouts render. */
+function InfoTabs({
+  nft,
+  idPrefix,
+  className,
+}: {
+  nft: NftDetail
+  idPrefix: string
+  className?: string
+}) {
+  const [tab, setTab] = useState<'details' | 'reviews'>('details')
+
+  // WAI-ARIA tabs pattern: arrows/Home/End move selection and focus between tabs.
+  const onTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const keys = ['details', 'reviews'] as const
+    const current = keys.indexOf(tab)
+    const next =
+      event.key === 'ArrowRight'
+        ? (current + 1) % keys.length
+        : event.key === 'ArrowLeft'
+          ? (current - 1 + keys.length) % keys.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? keys.length - 1
+              : -1
+    if (next < 0) return
+    event.preventDefault()
+    setTab(keys[next]!)
+    document.getElementById(`${idPrefix}-tab-${keys[next]}`)?.focus()
+  }
+
+  return (
+    <section className={className} aria-label="Mais informações">
+      <div
+        role="tablist"
+        aria-label="Informações do NFT"
+        onKeyDown={onTabKeyDown}
+        className="flex gap-8 overflow-x-auto border-b border-primary/30 [scrollbar-width:none]"
+      >
+        {(
+          [
+            ['details', 'Detalhes do NFT'],
+            [
+              'reviews',
+              <>
+                {/* Short label on phones so the tab is not cut off. */}
+                <span className="md:hidden">Avaliações ({nft.reviewCount})</span>
+                <span className="hidden md:inline">
+                  Avaliações de colecionadores ({nft.reviewCount})
+                </span>
+              </>,
+            ],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            id={`${idPrefix}-tab-${key}`}
+            aria-selected={tab === key}
+            aria-controls={`${idPrefix}-panel-${key}`}
+            tabIndex={tab === key ? 0 : -1}
+            onClick={() => setTab(key)}
+            className={cn(
+              '-mb-px shrink-0 border-b-2 pb-[10px] text-[17px] leading-4 max-md:text-[15px]',
+              tab === key
+                ? 'border-primary font-bold text-highlight'
+                : 'border-transparent hover:text-highlight',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === 'details' ? (
+        <div
+          id={`${idPrefix}-panel-details`}
+          role="tabpanel"
+          aria-labelledby={`${idPrefix}-tab-details`}
+          className="flex flex-col pt-3 text-sm leading-6 text-muted-foreground"
+        >
+          <p>{nft.story[0]}</p>
+          <p className="mt-6">{nft.story[1]}</p>
+          <h3 className="mt-3 font-bold text-foreground">Rede:</h3>
+          <p>
+            Cunhado na {networkLabels[nft.network]} com procedência imutável e metadados armazenados
+            no IPFS.
+          </p>
+          <h3 className="mt-3 font-bold text-foreground">Contrato:</h3>
+          <p>
+            {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)} • Contrato
+            inteligente ERC-721 verificado.
+          </p>
+          <h3 className="mt-3 font-bold text-foreground">Direitos autorais:</h3>
+          <p>
+            Direitos autorais do criador: {nft.royaltyPercent}% nas vendas secundárias, pagos
+            automaticamente pelos mercados compatíveis.
+          </p>
+        </div>
+      ) : (
+        <div
+          id={`${idPrefix}-panel-reviews`}
+          role="tabpanel"
+          aria-labelledby={`${idPrefix}-tab-reviews`}
+          className="flex flex-col gap-3 pt-3 text-sm leading-6 text-muted-foreground"
+        >
+          <p className="flex items-center gap-2">
+            <Stars rating={nft.rating} /> {nft.rating.toFixed(1)} de 5 · {nft.reviewCount}{' '}
+            avaliações
+          </p>
+          <p>Os comentários de colecionadores não estão disponíveis nesta demonstração.</p>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -190,7 +343,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
   const exclusive = useSingleFlight()
   const [editionId, setEditionId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
-  const [tab, setTab] = useState<'details' | 'reviews'>('details')
+  const [moreOpen, setMoreOpen] = useState(false)
   const [activeImage, setActiveImage] = useState(0)
 
   // Default to the cheapest edition with stock (the price shown on the card);
@@ -261,28 +414,6 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
     setQuantity(1)
   }
 
-  // WAI-ARIA tabs pattern: arrows/Home/End move selection and focus between tabs.
-  const onTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const keys = ['details', 'reviews'] as const
-    const current = keys.indexOf(tab)
-    const next =
-      event.key === 'ArrowRight'
-        ? (current + 1) % keys.length
-        : event.key === 'ArrowLeft'
-          ? (current - 1 + keys.length) % keys.length
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? keys.length - 1
-              : -1
-    if (next < 0) return
-    event.preventDefault()
-    setTab(keys[next]!)
-    document.getElementById(`tab-${keys[next]}`)?.focus()
-  }
-
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const shareText = `${nft.name} na Kurio`
   const availability = soldOut
     ? 'Edição esgotada.'
     : `${edition.available} disponíve${edition.available === 1 ? 'l' : 'is'} · limite de ${edition.maxPerOrder} por pedido${inCart ? ` · ${inCart} no carrinho` : ''}`
@@ -366,7 +497,9 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
               <span className="sr-only">avaliações</span>
             </span>
           </div>
-          <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{nft.description}</p>
+          <p className={cn('text-sm leading-6 text-muted-foreground', !moreOpen && 'line-clamp-3')}>
+            {nft.description}
+          </p>
           <EditionPicker
             editions={nft.editions}
             selected={edition.id}
@@ -388,6 +521,29 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
             </div>
           </dl>
           <p className="text-xs text-subtle">{availability}</p>
+          {/* Not in the mobile frame: the details the desktop shows stay reachable on phones. */}
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-controls="nft-more-mobile"
+            onClick={() => setMoreOpen((open) => !open)}
+            className="flex items-center gap-1 self-start text-sm font-bold text-highlight"
+          >
+            {moreOpen ? 'Ver menos detalhes' : 'Ver mais detalhes'}
+            <ChevronDown
+              aria-hidden
+              className={cn('size-4 transition-transform', moreOpen && 'rotate-180')}
+            />
+          </button>
+          {moreOpen && (
+            <div
+              id="nft-more-mobile"
+              className="flex animate-in flex-col gap-5 duration-300 fade-in-0 slide-in-from-top-2"
+            >
+              <ShareLinks nft={nft} />
+              <InfoTabs nft={nft} idPrefix="m" />
+            </div>
+          )}
         </section>
         {/* Buy bar (Figma: 164px at the bottom). Sticky, not fixed: it stays on screen
             while the NFT is in view and never covers the footer at the end of the page. */}
@@ -545,113 +701,16 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
                   <dd className="inline">{nft.attributes.join(', ')}</dd>
                 </div>
               </dl>
-              <div className="flex items-center gap-2 text-[15px] leading-4 font-bold">
-                Compartilhar este NFT:
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Compartilhar no LinkedIn (abre em nova aba)"
-                  className="hover:text-highlight"
-                >
-                  <LinkedinIcon className="size-[18px]" />
-                </a>
-                <a
-                  href={`mailto:?subject=${encodeURIComponent(shareText)}&body=${encodeURIComponent(shareUrl)}`}
-                  aria-label="Compartilhar por e-mail"
-                  className="hover:text-highlight"
-                >
-                  <Mail aria-hidden className="size-[18px]" />
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Compartilhar no Twitter (abre em nova aba)"
-                  className="hover:text-highlight"
-                >
-                  <TwitterIcon className="size-[18px]" />
-                </a>
-              </div>
+              <ShareLinks nft={nft} />
             </div>
           </div>
         </div>
 
-        {/* Tabs (Figma: 17px, gap 32, divider at 30% opacity). */}
-        <section className="mt-24" aria-label="Mais informações">
-          <div
-            role="tablist"
-            aria-label="Informações do NFT"
-            onKeyDown={onTabKeyDown}
-            className="flex gap-8 border-b border-primary/30"
-          >
-            {(
-              [
-                ['details', 'Detalhes do NFT'],
-                ['reviews', `Avaliações de colecionadores (${nft.reviewCount})`],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                id={`tab-${key}`}
-                aria-selected={tab === key}
-                aria-controls={`panel-${key}`}
-                tabIndex={tab === key ? 0 : -1}
-                onClick={() => setTab(key)}
-                className={cn(
-                  '-mb-px border-b-2 pb-[10px] text-[17px] leading-4',
-                  tab === key
-                    ? 'border-primary font-bold text-highlight'
-                    : 'border-transparent hover:text-highlight',
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {tab === 'details' ? (
-            <div
-              id="panel-details"
-              role="tabpanel"
-              aria-labelledby="tab-details"
-              className="flex flex-col pt-3 text-sm leading-6 text-muted-foreground"
-            >
-              <p>{nft.story[0]}</p>
-              <p className="mt-6">{nft.story[1]}</p>
-              <h3 className="mt-3 font-bold text-foreground">Rede:</h3>
-              <p>
-                Cunhado na {networkLabels[nft.network]} com procedência imutável e metadados
-                armazenados no IPFS.
-              </p>
-              <h3 className="mt-3 font-bold text-foreground">Contrato:</h3>
-              <p>
-                {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)} • Contrato
-                inteligente ERC-721 verificado.
-              </p>
-              <h3 className="mt-3 font-bold text-foreground">Direitos autorais:</h3>
-              <p>
-                Direitos autorais do criador: {nft.royaltyPercent}% nas vendas secundárias, pagos
-                automaticamente pelos mercados compatíveis.
-              </p>
-            </div>
-          ) : (
-            <div
-              id="panel-reviews"
-              role="tabpanel"
-              aria-labelledby="tab-reviews"
-              className="flex flex-col gap-3 pt-3 text-sm leading-6 text-muted-foreground"
-            >
-              <p className="flex items-center gap-2">
-                <Stars rating={nft.rating} /> {nft.rating.toFixed(1)} de 5 · {nft.reviewCount}{' '}
-                avaliações
-              </p>
-              <p>Os comentários de colecionadores não estão disponíveis nesta demonstração.</p>
-            </div>
-          )}
-        </section>
+        <InfoTabs nft={nft} idPrefix="d" className="mt-24" />
+      </div>
 
+      {/* Shared by both layouts (the mobile frame has none; kept so phones see it too). */}
+      <div className="container-page">
         <RelatedCarousel nftId={nft.id} title="Mais desta coleção" />
       </div>
     </article>

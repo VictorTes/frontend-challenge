@@ -1,4 +1,4 @@
-import { expect, NFT, test } from './support/fixtures'
+import { expect, isMobile, NFT, test } from './support/fixtures'
 
 test.describe('Detalhe do NFT', () => {
   test('acesso direto carrega galeria, informações e edições @mobile', async ({ page, open }) => {
@@ -45,4 +45,19 @@ test.describe('Detalhe do NFT', () => {
     })
     await expect(stepper.locator('output')).toHaveText('4')
   })
+
+  test('mobile: "Ver mais detalhes" mostra abas, compartilhar e relacionados como no desktop @mobile', async ({ page, open }) => {
+    await open(`/nfts/${NFT.emerald.id}`)
+    test.skip(!isMobile(page), 'Desktop already shows everything')
+    const toggle = page.getByRole('button', { name: 'Ver mais detalhes' })
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+    await expect(page.getByRole('button', { name: 'Ver menos detalhes' })).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByRole('tabpanel')).toContainText('Contrato inteligente ERC-721')
+    await page.getByRole('tab', { name: /Avaliações/ }).click()
+    await expect(page.getByRole('tabpanel')).toContainText('4.8 de 5')
+    await expect(page.getByRole('link', { name: /Compartilhar no LinkedIn/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Mais desta coleção' })).toBeVisible()
+  })
 })
+
