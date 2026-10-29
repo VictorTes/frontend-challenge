@@ -49,6 +49,22 @@ test.describe('Carrinho', () => {
     await expect(value).toHaveText('4')
   })
 
+  test('duplo clique em comprar e em remover não duplica a operação', async ({ page, open }) => {
+    await open(`/nfts/${NFT.emerald.id}`)
+    const adds: string[] = []
+    page.on('request', (r) => r.method() === 'POST' && r.url().endsWith('/api/cart/items') && adds.push(r.url()))
+    await page.getByRole('button', { name: 'COMPRAR', exact: true }).dblclick()
+    await expect(page).toHaveURL('/cart')
+    const value = item(page, NFT.emerald.id).getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` }).locator('output')
+    await expect(value).toHaveText('1')
+    expect(adds).toHaveLength(1)
+
+    await item(page, NFT.emerald.id).getByRole('button', { name: `Remover ${NFT.emerald.name} do carrinho` }).dblclick()
+    await expect(page.getByTestId('cart-item')).toHaveCount(0)
+    // A second DELETE would 404 and show an error toast.
+    await expect(page.locator('[data-sonner-toast][data-type="error"]')).toHaveCount(0)
+  })
+
   test('cupom válido, inválido, expirado e remoção', async ({ page, open }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id, 2)

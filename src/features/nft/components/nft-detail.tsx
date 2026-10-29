@@ -18,6 +18,7 @@ import { useSession } from '@/shared/session/session-store'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { RelatedCarousel } from './related-carousel'
+import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
 
 function Stars({ rating, className }: { rating: number; className?: string }) {
   return (
@@ -183,6 +184,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
   const session = useSession()
   const isFavorite = useIsFavorite(nftId)
   const toggleFavorite = useToggleFavorite()
+  const exclusive = useSingleFlight()
   const [editionId, setEditionId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [tab, setTab] = useState<'details' | 'reviews'>('details')
@@ -406,7 +408,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => add(true)}
+              onClick={() => exclusive(() => add(true))}
               disabled={buyDisabled}
               className="h-[60px] w-[196px] rounded-[40px] bg-gradient-to-r from-highlight to-primary text-base leading-5 font-bold text-primary-foreground disabled:opacity-50"
             >
@@ -415,7 +417,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
             <button
               type="button"
               aria-label="Adicionar ao carrinho"
-              onClick={() => add(false)}
+              onClick={() => exclusive(() => add(false))}
               disabled={buyDisabled}
               className="flex size-[60px] items-center justify-center rounded-[40px] border border-border bg-[#2f1d15] text-highlight disabled:opacity-50"
             >
@@ -496,7 +498,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => add(true)}
+                  onClick={() => exclusive(() => add(true))}
                   disabled={buyDisabled}
                   className="h-10 max-w-[130px] min-w-0 flex-1 rounded-[6px] bg-primary text-sm leading-5 font-bold text-primary-foreground hover:bg-highlight disabled:cursor-not-allowed disabled:opacity-50"
                 >

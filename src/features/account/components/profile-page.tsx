@@ -1,12 +1,26 @@
 import { ImageIcon } from 'lucide-react'
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { toast } from 'sonner'
 import { ApiError } from '@/shared/api/errors'
 import { ErrorState } from '@/shared/components/feedback'
-import { EnsInput, Field, focusFirstError, issuesToErrors, PasswordField, TextField } from '@/shared/components/form-field'
-import { MAX_AVATAR_BYTES, passwordChangeInput, profileInput, type ProfileInput, type User } from '@/shared/contracts'
+import {
+  EnsInput,
+  Field,
+  focusFirstError,
+  issuesToErrors,
+  PasswordField,
+  TextField,
+} from '@/shared/components/form-field'
+import {
+  MAX_AVATAR_BYTES,
+  passwordChangeInput,
+  profileInput,
+  type ProfileInput,
+  type User,
+} from '@/shared/contracts'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useChangePassword, useProfile, useUpdateAvatar, useUpdateProfile } from '../hooks'
+import { useLockedSubmit } from '@/shared/hooks/use-locked-submit'
 
 const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp']
 
@@ -72,13 +86,31 @@ function AvatarEditor({ user }: { user: User }) {
       </span>
       <div className="flex items-center gap-6" role="group" aria-labelledby="avatar-label">
         {user.avatarUrl ? (
-          <img src={user.avatarUrl} alt="Avatar atual" width={50} height={50} className="size-[50px] rounded-full object-cover" data-testid="avatar-image" />
+          <img
+            src={user.avatarUrl}
+            alt="Avatar atual"
+            width={50}
+            height={50}
+            className="size-[50px] rounded-full object-cover"
+            data-testid="avatar-image"
+          />
         ) : (
-          <span className="flex size-[50px] items-center justify-center rounded-full border border-border bg-[#2f1d15] text-highlight" aria-label="Sem avatar">
+          <span
+            className="flex size-[50px] items-center justify-center rounded-full border border-border bg-[#2f1d15] text-highlight"
+            aria-label="Sem avatar"
+          >
             <ImageIcon aria-hidden className="size-5" />
           </span>
         )}
-        <input ref={inputRef} type="file" accept={ACCEPTED.join(',')} className="sr-only" onChange={onFile} aria-label="Escolher imagem de avatar" tabIndex={-1} />
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ACCEPTED.join(',')}
+          className="sr-only"
+          onChange={onFile}
+          aria-label="Escolher imagem de avatar"
+          tabIndex={-1}
+        />
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -87,7 +119,12 @@ function AvatarEditor({ user }: { user: User }) {
         >
           {updateAvatar.isPending ? 'Enviando…' : 'Alterar'}
         </button>
-        <button type="button" onClick={remove} disabled={updateAvatar.isPending || !user.avatarUrl} className="text-sm hover:text-highlight disabled:cursor-not-allowed disabled:opacity-50">
+        <button
+          type="button"
+          onClick={remove}
+          disabled={updateAvatar.isPending || !user.avatarUrl}
+          className="text-sm hover:text-highlight disabled:cursor-not-allowed disabled:opacity-50"
+        >
           Remover
         </button>
       </div>
@@ -102,8 +139,10 @@ function AvatarEditor({ user }: { user: User }) {
 
 export function ProfilePage() {
   const profile = useProfile()
-  if (profile.error && !profile.data) return <ErrorState error={profile.error} onRetry={() => profile.refetch()} />
-  if (!profile.data) return <Skeleton className="h-[500px] w-full bg-card" aria-label="Carregando perfil" />
+  if (profile.error && !profile.data)
+    return <ErrorState error={profile.error} onRetry={() => profile.refetch()} />
+  if (!profile.data)
+    return <Skeleton className="h-[500px] w-full bg-card" aria-label="Carregando perfil" />
   return <ProfileForm user={profile.data} />
 }
 
@@ -121,17 +160,19 @@ function ProfileForm({ user }: { user: User }) {
   const setPw = (key: keyof typeof passwords) => (e: { target: { value: string } }) =>
     setPasswords((p) => ({ ...p, [key]: e.target.value }))
 
-  const wantsPasswordChange = Boolean(passwords.currentPassword || passwords.newPassword || passwords.confirm)
+  const wantsPasswordChange = Boolean(
+    passwords.currentPassword || passwords.newPassword || passwords.confirm,
+  )
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
+  const submit = useLockedSubmit(async () => {
     setFormError(null)
     const parsedProfile = profileInput.safeParse(values)
     const nextErrors = parsedProfile.success ? {} : issuesToErrors(parsedProfile.error.issues)
     if (wantsPasswordChange) {
       const parsedPw = passwordChangeInput.safeParse(passwords)
       if (!parsedPw.success) Object.assign(nextErrors, issuesToErrors(parsedPw.error.issues))
-      if (passwords.newPassword !== passwords.confirm) nextErrors.confirm = 'As senhas não coincidem'
+      if (passwords.newPassword !== passwords.confirm)
+        nextErrors.confirm = 'As senhas não coincidem'
     }
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length || !parsedProfile.success) {
@@ -142,7 +183,10 @@ function ProfileForm({ user }: { user: User }) {
       const user = await updateProfile.mutateAsync(parsedProfile.data)
       setValues(toForm(user))
       if (wantsPasswordChange) {
-        await changePassword.mutateAsync({ currentPassword: passwords.currentPassword, newPassword: passwords.newPassword })
+        await changePassword.mutateAsync({
+          currentPassword: passwords.currentPassword,
+          newPassword: passwords.newPassword,
+        })
         setPasswords({ currentPassword: '', newPassword: '', confirm: '' })
         toast.success('Perfil e senha atualizados.')
       } else {
@@ -154,7 +198,7 @@ function ProfileForm({ user }: { user: User }) {
       setFormError(apiError.message)
       focusFirstError(formRef.current)
     }
-  }
+  })
 
   const saving = updateProfile.isPending || changePassword.isPending
 
@@ -162,21 +206,74 @@ function ProfileForm({ user }: { user: User }) {
     <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
       <h1 className="text-base font-bold">Perfil do colecionador</h1>
       <div className="grid gap-6 md:grid-cols-2 md:gap-x-7">
-        <TextField label="Nome de exibição" required value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
-        <TextField label="Nome de usuário" required value={values.username} onChange={set('username')} error={errors.username} autoComplete="username" />
-        <TextField label="E-mail" type="email" required value={values.email} onChange={set('email')} error={errors.email} autoComplete="email" />
+        <TextField
+          label="Nome de exibição"
+          required
+          value={values.name}
+          onChange={set('name')}
+          error={errors.name}
+          autoComplete="name"
+        />
+        <TextField
+          label="Nome de usuário"
+          required
+          value={values.username}
+          onChange={set('username')}
+          error={errors.username}
+          autoComplete="username"
+        />
+        <TextField
+          label="E-mail"
+          type="email"
+          required
+          value={values.email}
+          onChange={set('email')}
+          error={errors.email}
+          autoComplete="email"
+        />
         <Field label="Nome ENS" error={errors.ensName}>
-          {(a11y) => <EnsInput a11y={a11y} value={values.ensName} onChange={(ensName) => setValues((v) => ({ ...v, ensName }))} />}
+          {(a11y) => (
+            <EnsInput
+              a11y={a11y}
+              value={values.ensName}
+              onChange={(ensName) => setValues((v) => ({ ...v, ensName }))}
+            />
+          )}
         </Field>
-        <TextField label="Apelido da carteira" required value={values.walletNickname} onChange={set('walletNickname')} error={errors.walletNickname} />
+        <TextField
+          label="Apelido da carteira"
+          required
+          value={values.walletNickname}
+          onChange={set('walletNickname')}
+          error={errors.walletNickname}
+        />
         <AvatarEditor user={user} />
       </div>
 
       <fieldset className="flex max-w-[417px] flex-col gap-5">
         <legend className="mb-4 text-base font-bold">Alterar senha</legend>
-        <PasswordField label="Senha atual" autoComplete="current-password" value={passwords.currentPassword} onChange={setPw('currentPassword')} error={errors.currentPassword} />
-        <PasswordField label="Nova senha" autoComplete="new-password" value={passwords.newPassword} onChange={setPw('newPassword')} error={errors.newPassword} placeholder="Mínimo de 8 caracteres, com letras e números" />
-        <PasswordField label="Confirmar nova senha" autoComplete="new-password" value={passwords.confirm} onChange={setPw('confirm')} error={errors.confirm} />
+        <PasswordField
+          label="Senha atual"
+          autoComplete="current-password"
+          value={passwords.currentPassword}
+          onChange={setPw('currentPassword')}
+          error={errors.currentPassword}
+        />
+        <PasswordField
+          label="Nova senha"
+          autoComplete="new-password"
+          value={passwords.newPassword}
+          onChange={setPw('newPassword')}
+          error={errors.newPassword}
+          placeholder="Mínimo de 8 caracteres, com letras e números"
+        />
+        <PasswordField
+          label="Confirmar nova senha"
+          autoComplete="new-password"
+          value={passwords.confirm}
+          onChange={setPw('confirm')}
+          error={errors.confirm}
+        />
       </fieldset>
 
       {formError && (
@@ -184,7 +281,11 @@ function ProfileForm({ user }: { user: User }) {
           {formError}
         </p>
       )}
-      <button type="submit" disabled={saving} className="h-10 w-fit rounded-[2px] bg-primary px-10 text-sm font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60">
+      <button
+        type="submit"
+        disabled={saving}
+        className="h-10 w-fit rounded-[2px] bg-primary px-10 text-sm font-bold text-primary-foreground hover:bg-highlight disabled:opacity-60"
+      >
         {saving ? 'Salvando…' : 'Salvar'}
       </button>
     </form>

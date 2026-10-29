@@ -109,4 +109,35 @@ test.describe('Regras do servidor simulado', () => {
     await open('/?page=4')
     await expect.poll(() => grid.locator('article h3').allTextContents()).toEqual(names)
   })
+
+  test('envios repetidos (Enter e clique duplo) geram uma única requisição', async ({ page, open, mock }) => {
+    const count = (method: string, path: string) => {
+      let n = 0
+      page.on('request', (r) => {
+        if (r.method() === method && new URL(r.url()).pathname === path) n++
+      })
+      return () => n
+    }
+    const logins = count('POST', '/api/auth/login')
+    await open('/login', 'slow')
+    await page.getByLabel('E-mail', { exact: true }).fill('alice@kurio.test')
+    const password = page.getByLabel('Senha', { exact: true })
+    await password.fill('Kurio@2026')
+    await password.press('Enter')
+    await expect(page.getByRole('button', { name: 'Entrando…' })).toBeDisabled()
+    await password.press('Enter')
+    await password.press('Enter')
+    await expect(page).toHaveURL('/', { timeout: 15_000 })
+    expect(logins()).toBe(1)
+
+    await mock.setScenario('default')
+    await addToCart(page, NFT.emerald.id)
+    await mock.setScenario('slow')
+    const coupons = count('PUT', '/api/cart/coupon')
+    await page.getByLabel('Código promocional').fill('KURIO10')
+    await page.getByRole('button', { name: 'Aplicar' }).dblclick()
+    await expect(page.getByText('KURIO10').first()).toBeVisible({ timeout: 15_000 })
+    expect(coupons()).toBe(1)
+  })
 })
+

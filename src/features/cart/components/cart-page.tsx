@@ -12,6 +12,7 @@ import { compareEth, formatEth, mulEth } from '@/shared/lib/money'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useAcknowledgePrices, useCart, useRemoveCartItem, useUpdateCartItem } from '../hooks'
 import { CouponForm, QuoteTotals } from './summary'
+import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
 
 function itemMax(item: CartItem) {
   return Math.max(1, Math.min(item.available, item.maxPerOrder))
@@ -97,8 +98,11 @@ function CartRow({ item, issues }: { item: CartItem; issues: QuoteIssue[] }) {
   const busy = saving || remove.isPending
   const priceChanged = compareEth(item.unitPriceEth, item.addedPriceEth) !== 0
 
+  const exclusive = useSingleFlight()
   const removeItem = () =>
-    remove.mutate(item.id, { onError: (err) => toast.error(ApiError.from(err).message) })
+    exclusive(() =>
+      remove.mutateAsync(item.id).catch((err) => toast.error(ApiError.from(err).message)),
+    )
   const max = Math.max(quantity > itemMax(item) ? quantity : itemMax(item), 1)
   const oldPrice = priceChanged && (
     <s className="ml-2 text-xs text-subtle">

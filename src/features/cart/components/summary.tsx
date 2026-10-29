@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { ApiError } from '@/shared/api/errors'
 import type { Quote } from '@/shared/contracts'
@@ -6,6 +6,7 @@ import { formatEth } from '@/shared/lib/money'
 import { cn } from '@/shared/lib/utils'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useApplyCoupon, useRemoveCoupon } from '../hooks'
+import { useLockedSubmit } from '@/shared/hooks/use-locked-submit'
 
 /** Subtotal / discount / fee / total, always from the server quote. */
 export function QuoteTotals({
@@ -22,7 +23,11 @@ export function QuoteTotals({
 }) {
   if (!quote) {
     return (
-      <div className={cn('flex flex-col gap-3', className)} aria-busy="true" aria-label="Calculando resumo">
+      <div
+        className={cn('flex flex-col gap-3', className)}
+        aria-busy="true"
+        aria-label="Calculando resumo"
+      >
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-6 w-full bg-accent" />
         ))}
@@ -31,7 +36,15 @@ export function QuoteTotals({
   }
   return (
     // Figma: labels 15/20, amounts 18/16, discount 15/20, total 16 bold + 18 bold #e89b55.
-    <dl className={cn('flex flex-col gap-3 text-[15px] leading-5 transition-opacity', isUpdating && 'opacity-60', className)} aria-busy={isUpdating} data-testid="quote-totals">
+    <dl
+      className={cn(
+        'flex flex-col gap-3 text-[15px] leading-5 transition-opacity',
+        isUpdating && 'opacity-60',
+        className,
+      )}
+      aria-busy={isUpdating}
+      data-testid="quote-totals"
+    >
       <div className="flex items-center justify-between gap-4">
         <dt>Subtotal</dt>
         <dd className="text-lg leading-4 whitespace-nowrap" data-testid="quote-subtotal">
@@ -41,9 +54,15 @@ export function QuoteTotals({
       <div className="flex items-center justify-between gap-4">
         <dt className="min-w-0 sm:whitespace-nowrap">
           Desconto do lançamento
-          {quote.coupon && <span className="ml-1 text-xs text-highlight">({quote.coupon.code} −{quote.coupon.percentOff}%)</span>}
+          {quote.coupon && (
+            <span className="ml-1 text-xs text-highlight">
+              ({quote.coupon.code} −{quote.coupon.percentOff}%)
+            </span>
+          )}
         </dt>
-        <dd className="whitespace-nowrap" data-testid="quote-discount">(-) {formatEth(quote.discountEth)}</dd>
+        <dd className="whitespace-nowrap" data-testid="quote-discount">
+          (-) {formatEth(quote.discountEth)}
+        </dd>
       </div>
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-4">
@@ -54,9 +73,17 @@ export function QuoteTotals({
         </div>
         <span className="mt-2 self-end text-xs leading-4 text-highlight">Taxa estimada</span>
       </div>
-      <div className={cn('flex items-center justify-between gap-4', divided ? 'border-t border-primary/30 pt-3' : 'mt-3')}>
+      <div
+        className={cn(
+          'flex items-center justify-between gap-4',
+          divided ? 'border-t border-primary/30 pt-3' : 'mt-3',
+        )}
+      >
         <dt className="text-base leading-4 font-bold">Total</dt>
-        <dd className="text-lg leading-4 font-bold whitespace-nowrap text-highlight" data-testid="quote-total">
+        <dd
+          className="text-lg leading-4 font-bold whitespace-nowrap text-highlight"
+          data-testid="quote-total"
+        >
           {formatEth(quote.totalEth)}
         </dd>
       </div>
@@ -70,8 +97,7 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
+  const submit = useLockedSubmit(async () => {
     if (!code.trim()) {
       setError('Informe um código promocional.')
       return
@@ -84,7 +110,7 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
     } catch (err) {
       setError(ApiError.from(err).message)
     }
-  }
+  })
 
   if (couponCode) {
     return (
@@ -94,7 +120,9 @@ export function CouponForm({ couponCode }: { couponCode: string | null }) {
         </p>
         <button
           type="button"
-          onClick={() => remove.mutate(undefined, { onError: (err) => toast.error(ApiError.from(err).message) })}
+          onClick={() =>
+            remove.mutate(undefined, { onError: (err) => toast.error(ApiError.from(err).message) })
+          }
           disabled={remove.isPending}
           className="text-sm text-highlight underline disabled:opacity-50"
         >

@@ -12,8 +12,15 @@ import { compareEth, formatEth } from '@/shared/lib/money'
 import { cn } from '@/shared/lib/utils'
 import { useSession } from '@/shared/session/session-store'
 import { Skeleton } from '@/shared/ui/skeleton'
+import { useSingleFlight } from '@/shared/hooks/use-locked-submit'
 
-export function FavoriteButton({ nft, className }: { nft: Pick<NftSummary, 'id' | 'name'>; className?: string }) {
+export function FavoriteButton({
+  nft,
+  className,
+}: {
+  nft: Pick<NftSummary, 'id' | 'name'>
+  className?: string
+}) {
   const session = useSession()
   const navigate = useNavigate()
   const isFavorite = useIsFavorite(nft.id)
@@ -44,6 +51,7 @@ export function FavoriteButton({ nft, className }: { nft: Pick<NftSummary, 'id' 
 export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?: boolean }) {
   const addToCart = useAddToCart()
   const queryClient = useQueryClient()
+  const exclusive = useSingleFlight()
   const soldOut = nft.available === 0
 
   const quickAdd = async () => {
@@ -88,11 +96,14 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
           </span>
         )}
         {/* Mobile layout: heart in the artwork's top-right corner. */}
-        <FavoriteButton nft={nft} className="absolute top-3 right-3 z-10 size-7 rounded-full bg-background/80 md:hidden [&_svg]:size-4" />
+        <FavoriteButton
+          nft={nft}
+          className="absolute top-3 right-3 z-10 size-7 rounded-full bg-background/80 md:hidden [&_svg]:size-4"
+        />
         <div className="absolute inset-x-0 bottom-1 hidden justify-center gap-2 transition md:flex md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
           <button
             type="button"
-            onClick={quickAdd}
+            onClick={() => exclusive(quickAdd)}
             disabled={soldOut || addToCart.isPending}
             aria-label={`Adicionar ${nft.name} ao carrinho`}
             className="flex size-[34px] items-center justify-center rounded-[6px] bg-background/90 hover:text-highlight disabled:opacity-50"
@@ -112,7 +123,11 @@ export function NftCard({ nft, priority = false }: { nft: NftSummary; priority?:
       </div>
       <div className="flex flex-col gap-3 max-md:gap-1 max-md:px-2">
         <h3 className="text-base leading-4">
-          <Link to="/nfts/$nftId" params={{ nftId: nft.id }} className="hover:text-highlight focus-visible:text-highlight">
+          <Link
+            to="/nfts/$nftId"
+            params={{ nftId: nft.id }}
+            className="hover:text-highlight focus-visible:text-highlight"
+          >
             {nft.name}
           </Link>
         </h3>
