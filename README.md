@@ -129,7 +129,7 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 
 | Spec | Cobertura (itens do §9 do enunciado) |
 | --- | --- |
-| `catalog.spec.ts` | 1: busca, filtros combinados, ordenação, paginação, refresh e histórico; vazio; fora de ordem |
+| `catalog.spec.ts` | 1: busca, filtros combinados, ordenação, paginação, refresh e histórico; vazio; fora de ordem; links do rodapé (reais x fora do escopo) |
 | `nft-detail.spec.ts` | 2: acesso direto, NFT e rota inexistentes, edição esgotada, limite de quantidade |
 | `auth.spec.ts` | 3: cadastro (validação e conflito), login com retorno, refresh, expiração, logout e troca de usuário |
 | `favorites.spec.ts` | 4: persistência, falha da mutation com rollback e recuperação |
@@ -138,12 +138,12 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 | `payment-failures.spec.ts` | 7: recusa, clique repetido, timeout com recuperação idempotente, carteira recusada |
 | `account.spec.ts` | 8: perfil, avatar, senha e carteiras com erros de validação |
 | `realtime.spec.ts` | 9 e 10: preço muda no carrinho e no checkout, 409 no envio, duplicados e antigos, reconexão, pedido pendente |
-| `a11y.spec.ts` | 11: axe (WCAG 2.1 AA, sem violações graves), teclado, foco de diálogos, validação |
+| `a11y.spec.ts` | 11: axe (WCAG 2.1 AA, sem violações graves), teclado, abas com setas (WAI-ARIA), foco de diálogos, validação |
 | `loading.spec.ts` | 12: skeletons, erro e nova tentativa, 500, offline |
 | `server-rules.spec.ts` | Esgotamento no envio, idempotência (mesma chave = mesmo pedido; conteúdo diferente = 409), pedido de outro usuário (403), liberação do socket no logout, latência variável |
 | `visual.spec.ts` | Regressão visual de início, detalhe, carrinho e pagamento (desktop e mobile), baselines em `tests/e2e/visual.spec.ts-snapshots/` |
 
-**Último resultado local:** 94 testes passando (58 desktop + 20 mobile + 16 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
+**Último resultado local:** 96 testes passando (60 desktop + 20 mobile + 16 tablet), em Windows 11 e Chromium headless shell 156. As baselines visuais são de `win32`; em outra plataforma, gere-as com `npm run test:e2e:update`.
 
 ## Performance e Lighthouse
 
@@ -157,12 +157,12 @@ Medianas da última execução (2026-10-29): Lighthouse 13.6.0, HeadlessChrome 1
 
 | Página | Perfil | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Início | mobile | **89** | 100 | 100 | 100 | 785 ms | 0.002 | 442 ms |
-| Início | desktop | 98 | 100 | 100 | 100 | 1105 ms | 0.001 | 35 ms |
-| Detalhe | mobile | **77** | 100 | 100 | 100 | 4699 ms | 0 | 291 ms |
-| Detalhe | desktop | 98 | 100 | 100 | 100 | 1080 ms | 0 | 0 ms |
+| Início | mobile | **72** | 100 | 100 | 100 | 4532 ms | 0 | 480 ms |
+| Início | desktop | 99 | 100 | 100 | 100 | 1043 ms | 0.006 | 36 ms |
+| Detalhe | mobile | **78** | 100 | 100 | 100 | 4310 ms | 0 | 309 ms |
+| Detalhe | desktop | 99 | 100 | 100 | 100 | 974 ms | 0 | 0 ms |
 
-Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** a performance mobile do detalhe (77) e a do início (89; as execuções variaram entre 86 e 90 ao longo do trabalho).
+Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (72; execuções 71–72) e detalhe (78; execuções 78–79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica em 99.
 
 **Causas identificadas** (diagnósticos `bootup-time`, `unused-javascript` e `lcp-breakdown` nos JSONs):
 
@@ -171,13 +171,16 @@ Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 
    - Em produção com API real, esse custo não existiria. A auditoria o inclui porque mede a entrega real.
 2. **LCP do detalhe depende de dados.** A imagem do NFT só é conhecida após `GET /nfts/:id`, então a cadeia simulada (HTML → JS → MSW → SW → chunk da rota → API → imagem) fica serial no modelo de 4G lento.
    - O breakdown observado sem throttling é pequeno (TTFB de 4ms, atraso de carga de 0.47s, carga de 57ms). O valor de 4.7s é a estimativa simulada do Lantern.
-   - No início, o LCP é o parágrafo de texto do hero, que não depende de dados; o que pesa ali é o TBT.
+   - No início mobile acontece o mesmo: no layout mobile do Figma o maior elemento é a imagem de um card do catálogo (antes do ajuste fino de fidelidade era o texto do hero, e a nota era 89). A imagem só existe depois de `GET /nfts`.
 
 **Otimizações aplicadas** (com efeito medido):
+- `modulepreload` no HTML para os chunks de boot (app e camada de mocks), injetado pelo plugin `preloadBootChunks` do `vite.config.ts`. Sem ele, os imports dinâmicos do `main.tsx` só eram descobertos depois do `index.js` executar. LCP observado (CPU 4×, 1,6 Mbps, 150 ms RTT, mediana de 5): início 4,26 s → 3,92 s; detalhe 4,27 s → 3,98 s.
+- Áreas de toque de 24×24 px sem sobreposição nos pontos do carrossel e da galeria (`target-size`): accessibility de 97 para 100.
 - App baixado em paralelo ao MSW; Socket.IO carregado sob demanda.
 - `main` com altura mínima: CLS do detalhe desktop passou de 0.136 para 0.
-- Carrossel com área de toque adequada e nome acessível coerente: accessibility passou de 97 para 100.
 - Code splitting por rota, imagens WebP responsivas (`srcset`/`sizes`), `fetchpriority=high` na imagem LCP e fonte self-hosted só com o subset latino.
+
+**Hipótese testada e descartada:** um service worker próprio que importava o do MSW e deixava `/assets/*` irem direto à rede (o worker do MSW consulta a thread principal para cada requisição, inclusive imagens). Na medição real o LCP do início piorou (3,94 s → 4,53 s), então a mudança foi revertida.
 
 **Próximos passos possíveis:**
 - Pré-renderizar o HTML das rotas públicas.

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T13:06:17.894Z",
+  "generatedAt": "2026-10-29T17:44:50.156Z",
   "environment": {
     "lighthouse": "13.6.0",
     "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
@@ -22,13 +22,13 @@
       "path": "/",
       "profile": "mobile",
       "median": {
-        "performance": 89,
+        "performance": 72,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
-        "lcpMs": 785,
-        "cls": 0.002,
-        "tbtMs": 442
+        "lcpMs": 4532,
+        "cls": 0,
+        "tbtMs": 480
       }
     },
     {
@@ -36,13 +36,13 @@
       "path": "/",
       "profile": "desktop",
       "median": {
-        "performance": 98,
+        "performance": 99,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
-        "lcpMs": 1105,
-        "cls": 0.001,
-        "tbtMs": 35
+        "lcpMs": 1043,
+        "cls": 0.006,
+        "tbtMs": 36
       }
     },
     {
@@ -50,13 +50,13 @@
       "path": "/nfts/emerald-ape-042",
       "profile": "mobile",
       "median": {
-        "performance": 77,
+        "performance": 78,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
-        "lcpMs": 4699,
+        "lcpMs": 4310,
         "cls": 0,
-        "tbtMs": 291
+        "tbtMs": 309
       }
     },
     {
@@ -64,11 +64,11 @@
       "path": "/nfts/emerald-ape-042",
       "profile": "desktop",
       "median": {
-        "performance": 98,
+        "performance": 99,
         "accessibility": 100,
         "best-practices": 100,
         "seo": 100,
-        "lcpMs": 1080,
+        "lcpMs": 974,
         "cls": 0,
         "tbtMs": 0
       }

@@ -142,7 +142,7 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 - "COMPRAR" adiciona ao carrinho e leva ao carrinho; o ícone de carrinho (mobile e cards) só adiciona.
 - **Pagamento:** o formulário leva a "Revisar e confirmar compra", que abre um diálogo de revisão. Nele o usuário conecta a carteira (aprovação simulada), pode desconectar e confirma. Mudanças de valores mostram o diff e exigem aceite.
 - A confirmação usa o layout do frame "Confirmação de Pedido", como página (rota `/orders/:id`) e não como modal, para suportar acesso direto e refresh.
-- Itens fora do escopo (Criadores, Aprenda, editorial, newsletter, suporte, atividade, ofertas, downloads, login social, "Esqueceu a senha?", links do rodapé) ficam visíveis e mostram um aviso "não está disponível nesta demonstração", sem simular sucesso.
+- Itens fora do escopo (Criadores, Aprenda, editorial, newsletter, suporte, atividade, ofertas, downloads, login social, "Esqueceu a senha?", links editoriais e de suporte do rodapé) ficam visíveis e mostram um aviso "não está disponível nesta demonstração", sem simular sucesso. Os links do rodapé que têm destino real navegam: "Meu perfil", "Lista de interesse" (favoritos) e as coleções (catálogo filtrado).
 
 ## Desvios do Figma e ajustes
 
@@ -151,11 +151,14 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 - **Pagamento:** "Endereço da carteira" e "ENS ou carteira secundária" são somente leitura e vêm da carteira cadastrada selecionada (o README pede o uso das carteiras cadastradas). "Usar outra carteira?" alterna para a carteira secundária. A lista de provedores (MetaMask, WalletConnect, Coinbase) segue o layout.
 - **Edições:** os chips "1/1, 1/10, 1/50, ABERTA" têm preços e estoques próprios. O preço do card é o da edição mais barata com estoque (1/50 no seed, que bate com o Figma, por exemplo Emerald Ape a 1.19 ETH).
 - **Avaliações:** a aba existe com nota e contagem, mas comentários não fazem parte do escopo.
+- **Tablet (768–1279px):** o Figma só tem frames de 1440 e 390. Entre eles, grids e colunas usam proporções do Figma (`minmax(0,311fr)…`, `flex-1`) e as larguras exatas valem a partir de 1280px (`xl`). Os cards promocionais ficam empilhados abaixo de 1024px e o hero reduz título e imagem. Verificado sem overflow horizontal em 390, 768, 1024, 1280 e 1440.
+- **Detalhe mobile:** o frame mobile não tem as abas, a história nem o carrossel de relacionados, e a implementação segue o frame. A barra de compra é `sticky` (e não `fixed`) para não cobrir o rodapé no fim da página.
 - **Ícones de marca:** o lucide v1 removeu os ícones de marca, então uso SVGs próprios equivalentes.
 - **Acessibilidade:**
   - Asterisco de obrigatório via CSS (fora do nome acessível).
   - Links inline sublinhados.
-  - Dots de carrossel com área de toque de 24px.
+  - Dots de carrossel e da galeria mobile com área de toque de 24×24 px sem sobreposição (WCAG 2.5.8).
+  - Abas do detalhe com setas, Home e End (padrão WAI-ARIA Tabs).
   - `scroll-padding` para o foco não ficar sob a tab bar mobile.
   - Link "Pular para o conteúdo".
 - **Assets:** as 4 artes de NFT são exportadas do arquivo Figma (WebP 320, 640 e 960) e reaproveitadas pelos 60 NFTs do seed, como no próprio layout. As duas outras imagens do arquivo (capturas de outro projeto) não foram usadas.
@@ -165,5 +168,5 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 - Não há backend real: sessão em `localStorage` (em produção, cookie httpOnly) e hash de senha feito no navegador.
 - O backend simulado roda na aba. Mutations em andamento são perdidas se a página recarregar antes de o handler responder (cerca de 120ms). Os testes esperam a resposta antes de recarregar.
 - As baselines visuais foram geradas no Windows (sufixo `-win32`). Em Linux ou CI, rode `npm run test:e2e:update` para gerar as da plataforma.
-- **Lighthouse:** a página de detalhe fica abaixo da meta de performance no perfil mobile simulado (ver README). O custo vem da camada de mocks executada antes do primeiro render.
-- Deploy: o `vercel.json` está pronto, mas a publicação depende de autorização (não foi feita).
+- **Lighthouse:** início e detalhe ficam abaixo da meta de performance no perfil mobile simulado (ver README). O LCP mobile das duas é uma imagem que depende da API, e a camada de mocks (MSW + backend simulado) roda antes do primeiro render.
+- Deploy: https://frontend-challenge-ivory-iota.vercel.app (Vercel, `vercel.json` com rewrite de SPA).
