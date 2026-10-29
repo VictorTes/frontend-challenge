@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
-    "lighthouse": "node lighthouse/run.mjs",
+    "lighthouse": "npm run build && node lighthouse/run.mjs",
     "routes": "tsr generate"
   },
   "dependencies": {
