@@ -145,6 +145,8 @@ Retries: 1 automático, só para falhas transitórias. Mutations não são repet
 
 ## Decisões de UX
 
+- **Movimento:** troca de página com View Transitions (fade do conteúdo antigo e entrada do novo com leve subida; cabeçalho e barra inferior ficam parados). A arte do card clicado vira a imagem do detalhe (elemento compartilhado `nft-hero`, atribuído no clique para nunca duplicar o nome). Filtros, abas e paginação não disparam transição, e a carga inicial também não. Em navegadores sem a API, um fade CSS faz o papel. Também há barra de progresso no topo para navegações acima de 150 ms, cascata de entrada dos cards, elevação no hover, rolagem suave para "Mercado" e "EXPLORAR", e diálogos, sheets e menus animados (`tw-animate-css`). Tudo é desligado com `prefers-reduced-motion`.
+
 - O catálogo reinicia a página ao mudar filtro, aba ou busca. Chips de filtros ativos têm remoção individual e "Limpar filtros".
 - No mobile, os filtros abrem em um Sheet lateral, e o detalhe tem uma barra de compra `sticky` (quantidade, preço, comprar e adicionar).
 - "COMPRAR" adiciona ao carrinho e leva ao carrinho; o ícone de carrinho (mobile e cards) só adiciona.
