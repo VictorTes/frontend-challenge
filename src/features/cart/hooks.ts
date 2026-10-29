@@ -32,7 +32,11 @@ function useCartMutation<TVariables>(mutationFn: (variables: TVariables) => Prom
   return useMutation({
     mutationFn,
     onSuccess: (cart) => {
-      queryClient.setQueryData(qk.cart(owner), cart)
+      // Concurrent mutations (two rows at once) may resolve out of order: a
+      // response older than the cached cart must not overwrite it.
+      queryClient.setQueryData<Cart>(qk.cart(owner), (current) =>
+        current && current.version > cart.version ? current : cart,
+      )
       if (owner !== 'guest') void queryClient.invalidateQueries({ queryKey: qk.quoteAll(owner) })
     },
     onError: () => {

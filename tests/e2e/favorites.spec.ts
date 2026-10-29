@@ -42,6 +42,19 @@ test.describe('Favoritos', () => {
     await expect(page.getByRole('button', { name: 'Favoritado' })).toBeVisible()
   })
 
+  test('cliques seguidos no favorito terminam no estado do último clique, também no servidor', async ({ page, login }) => {
+    await login('bruno', `/nfts/${NFT.emerald.id}`)
+    const button = page.getByRole('button', { name: /^(Favoritar|Favoritado)$/ })
+    await expect(button).toHaveAttribute('aria-pressed', 'false')
+    // Five toggles without waiting for the API: on, off, on, off, on.
+    for (let i = 0; i < 5; i++) await button.click()
+    await expect(button).toHaveAttribute('aria-pressed', 'true')
+    await page.waitForLoadState('networkidle')
+    await expect(button).toHaveAttribute('aria-pressed', 'true')
+    await page.reload()
+    await expect(page.getByRole('button', { name: 'Favoritado' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   test('visitante é enviado ao login ao favoritar', async ({ page, open }) => {
     await open(`/nfts/${NFT.emerald.id}`)
     await page.getByRole('button', { name: 'Favoritar', exact: true }).click()

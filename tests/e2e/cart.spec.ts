@@ -27,6 +27,28 @@ test.describe('Carrinho', () => {
     await expect(page.getByTestId('quote-total')).toHaveText('3.396 ETH')
   })
 
+  test('cliques rápidos no + somam todos e enviam uma única alteração @mobile', async ({ page, open }) => {
+    await open('/')
+    await addToCart(page, NFT.emerald.id)
+    const patches: number[] = []
+    page.on('request', (r) => {
+      if (r.method() === 'PATCH' && r.url().includes('/api/cart/items/')) patches.push(r.postDataJSON().quantity)
+    })
+    const plus = item(page, NFT.emerald.id).getByRole('button', { name: `Aumentar quantidade de ${NFT.emerald.name}` })
+    const value = item(page, NFT.emerald.id).getByRole('group', { name: `Quantidade de ${NFT.emerald.name}` }).locator('output')
+
+    // Three clicks within a few milliseconds (a real double/triple tap).
+    await plus.evaluate((button: HTMLButtonElement) => [0, 1, 2].forEach(() => button.click()))
+    // Optimistic: the number follows every click without waiting for the API.
+    await expect(value).toHaveText('4')
+    // One debounced request with the final value; the quote follows the server.
+    await expect(page.getByTestId('quote-subtotal')).toHaveText('4.76 ETH')
+    expect(patches).toEqual([4])
+
+    await page.reload()
+    await expect(value).toHaveText('4')
+  })
+
   test('cupom válido, inválido, expirado e remoção', async ({ page, open }) => {
     await open('/')
     await addToCart(page, NFT.emerald.id, 2)

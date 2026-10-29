@@ -52,6 +52,12 @@ export function useToggleFavorite() {
         `${favorite ? 'Não foi possível favoritar' : 'Não foi possível remover dos favoritos'}: ${errorMessage(error)}`,
       )
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
+    // Refetch only when the last toggle settles: refetching while another one is
+    // in flight would flash the intermediate state (rapid favorite/unfavorite).
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey: ['toggle-favorite', userId] }) === 1) {
+        return queryClient.invalidateQueries({ queryKey: key })
+      }
+    },
   })
 }
