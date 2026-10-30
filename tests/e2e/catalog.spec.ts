@@ -90,6 +90,19 @@ test.describe('Catálogo', () => {
     await expect.poll(() => cardNames(page)).toEqual(names)
   })
 
+  test('mobile: seções do rodapé abrem e fecham, e links fechados ficam fora do foco @mobile', async ({ page, open }) => {
+    await open('/cart')
+    test.skip(!isMobile(page), 'Desktop shows every column open, as in the Figma')
+    const footer = page.getByRole('contentinfo')
+    const section = footer.getByRole('button', { name: 'Coleções' })
+    await expect(section).toHaveAttribute('aria-expanded', 'false')
+    await expect(footer.getByRole('link', { name: 'Fotografia' })).toBeHidden()
+    await section.click()
+    await expect(section).toHaveAttribute('aria-expanded', 'true')
+    await footer.getByRole('link', { name: 'Fotografia' }).click()
+    await expect(page).toHaveURL(/collection=.*fotografia/)
+  })
+
   test('links do rodapé levam a funcionalidades existentes; os demais avisam que estão fora do escopo', async ({ page, open }) => {
     await open('/cart')
     const footer = page.getByRole('contentinfo')
