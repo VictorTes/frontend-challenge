@@ -153,16 +153,16 @@ npm run test:e2e                  # relatório HTML: npx playwright show-report
 - **Relatórios HTML/JSON por execução:** `lighthouse/reports/`.
 - **Medianas, versões e ambiente:** `lighthouse/reports/summary.md` e `summary.json`.
 
-Medianas da última execução (2026-10-29): Lighthouse 13.6.0, HeadlessChrome 156, Node 22.22, Windows 11, Ryzen 7 2700, `vite preview` local.
+Medianas da última execução (2026-10-30): Lighthouse 13.6.0, HeadlessChrome 156, Node 22.22, Windows 11, Ryzen 7 2700, `vite preview` local.
 
 | Página | Perfil | Performance | Accessibility | Best Practices | SEO | LCP | CLS | TBT |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Início | mobile | **70** | 100 | 100 | 100 | 4616 ms | 0 | 525 ms |
-| Início | desktop | 98 | 100 | 100 | 100 | 1052 ms | 0.006 | 37 ms |
-| Detalhe | mobile | **78** | 100 | 100 | 100 | 4308 ms | 0 | 331 ms |
-| Detalhe | desktop | 99 | 100 | 100 | 100 | 1018 ms | 0 | 0 ms |
+| Início | mobile | **71** | 100 | 100 | 100 | 4616 ms | 0 | 482 ms |
+| Início | desktop | 98 | 100 | 100 | 100 | 1053 ms | 0.006 | 37 ms |
+| Detalhe | mobile | **78** | 100 | 100 | 100 | 4308 ms | 0 | 330 ms |
+| Detalhe | desktop | 99 | 100 | 100 | 100 | 1009 ms | 0 | 0 ms |
 
-Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (70; execuções entre 69 e 73 ao longo do trabalho) e detalhe (78; execuções entre 76 e 79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica entre 98 e 99.
+Metas: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90. Ficam **abaixo da meta** só as performances mobile: início (71; execuções entre 69 e 73 ao longo do trabalho) e detalhe (78; execuções entre 76 e 79). Accessibility, Best Practices e SEO atingem 100 nas quatro combinações, e o desktop fica entre 98 e 99.
 
 **Causas identificadas** (diagnósticos `bootup-time`, `unused-javascript` e `lcp-breakdown` nos JSONs):
 
