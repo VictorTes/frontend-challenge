@@ -33,6 +33,9 @@ export function useToggleFavorite() {
 
   return useMutation({
     mutationKey: ['toggle-favorite', userId],
+    // Toggles run one after another: in parallel, a slow "remove" could reach the
+    // server after the last "add" and the final state would not be the last click.
+    scope: { id: `toggle-favorite:${userId}` },
     mutationFn: ({ nftId, favorite }: { nftId: string; favorite: boolean }) =>
       favorite ? api.favorites.add(nftId) : api.favorites.remove(nftId),
     onMutate: async ({ nftId, favorite }) => {
