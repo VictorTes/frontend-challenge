@@ -23,6 +23,15 @@ test.describe('Conta e sessão', () => {
     await expect(page.getByLabel('Nome de usuário')).toHaveValue('nova_conta')
   })
 
+  test('mobile: login e cadastro têm caminho de volta ao início @mobile', async ({ page, open }) => {
+    await open('/login')
+    test.skip(!isMobile(page), 'Desktop closes the dialog instead')
+    await page.getByRole('link', { name: 'Início' }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await open('/register')
+    await expect(page.getByRole('link', { name: 'Início' })).toHaveAttribute('href', '/')
+  })
+
   test('login inválido, login e retorno ao fluxo anterior', async ({ page, open }) => {
     await open('/account/wallets')
     await expect(page).toHaveURL(/\/login\?redirect=/)

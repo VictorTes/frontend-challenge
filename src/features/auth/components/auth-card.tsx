@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
-import { Eye, EyeOff, X } from 'lucide-react'
+import { ChevronLeft, Eye, EyeOff, X } from 'lucide-react'
 import { useId, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import { notAvailable } from '@/app/layout/out-of-scope'
 import { isPrivatePath } from '@/app/private-routes'
@@ -232,7 +232,15 @@ function Shell({ mode, redirect, description, mobileTitle, children }: ShellProp
   }
 
   return (
-    <section aria-labelledby="auth-title" className="flex flex-col px-7 pt-20 pb-6">
+    <section aria-labelledby="auth-title" className="relative flex flex-col px-7 pt-20 pb-6">
+      {/* Mobile has no bottom nav on these screens: a way back to the catalog. */}
+      <Link
+        to="/"
+        className="absolute top-6 left-7 inline-flex h-[35px] items-center gap-1 rounded-full border border-border bg-[#2f1d15] pr-3.5 pl-2 text-sm font-medium hover:text-highlight"
+      >
+        <ChevronLeft aria-hidden className="size-5" />
+        Início
+      </Link>
       <p
         aria-hidden
         className="flex h-[136px] items-center justify-center text-[32px] leading-[42px] font-bold tracking-[0.1em]"
