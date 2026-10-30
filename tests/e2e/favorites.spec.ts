@@ -46,10 +46,16 @@ test.describe('Favoritos', () => {
     await login('bruno', `/nfts/${NFT.emerald.id}`)
     const button = page.getByRole('button', { name: /^(Favoritar|Favoritado)$/ })
     await expect(button).toHaveAttribute('aria-pressed', 'false')
+    let saved = 0
+    page.on('response', (r) => {
+      if (r.url().includes('/api/me/favorites/') && ['PUT', 'DELETE'].includes(r.request().method())) saved++
+    })
     // Five toggles without waiting for the API: on, off, on, off, on.
     for (let i = 0; i < 5; i++) await button.click()
     await expect(button).toHaveAttribute('aria-pressed', 'true')
-    await page.waitForLoadState('networkidle')
+    // Toggles are sent one after another; reload only once the last one landed
+    // (`networkidle` may already have fired before the clicks).
+    await expect.poll(() => saved).toBe(5)
     await expect(button).toHaveAttribute('aria-pressed', 'true')
     await page.reload()
     await expect(page.getByRole('button', { name: 'Favoritado' })).toHaveAttribute('aria-pressed', 'true')
