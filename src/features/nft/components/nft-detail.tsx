@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { ChevronDown, ChevronLeft, Heart, Mail, Search, ShoppingCart, Star, X } from 'lucide-react'
-import { useState, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { toast } from 'sonner'
 import { NotFoundPage } from '@/app/not-found'
 import { useAddToCart, useCart } from '@/features/cart/hooks'
@@ -13,6 +13,7 @@ import { NftImage } from '@/shared/components/nft-image'
 import { QuantityStepper } from '@/shared/components/quantity-stepper'
 import { networkLabels, type Edition, type NftDetail } from '@/shared/contracts'
 import { compareEth, formatEth } from '@/shared/lib/money'
+import { prefersReducedMotion } from '@/shared/lib/motion'
 import { cn } from '@/shared/lib/utils'
 import { useSession } from '@/shared/session/session-store'
 import {
@@ -244,6 +245,145 @@ function InfoTabs({
   )
 }
 
+/**
+ * Mobile gallery: a native scroll-snap track, so the photo follows the finger
+ * and settles on the nearest image; the dots follow the swipe and still jump
+ * to an image when tapped.
+ */
+function MobileGallery({
+  nft,
+  active,
+  onActive,
+}: {
+  nft: NftDetail
+  active: number
+  onActive: (i: number) => void
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const touching = useRef(false)
+  const settleTimer = useRef<number | undefined>(undefined)
+  // Photo a dot or arrow key is scrolling to. While it is set, the positions the
+  // animation passes through must not change the active photo: two quick taps
+  // would otherwise start the second move from the photo being left behind.
+  const target = useRef<number | null>(null)
+  const images = nft.images.length > 0 ? nft.images : [nft.imageUrl]
+
+  const scrollToPhoto = (index: number) => {
+    const track = trackRef.current
+    track?.scrollTo({
+      left: index * track.clientWidth,
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    })
+  }
+
+  // Native snapping can leave a short, slow drag resting between two photos.
+  // Once the finger is up and scrolling stops, finish the move to the nearest one
+  // (or to the photo a dot/arrow asked for, if that animation was cut short).
+  const settle = () => {
+    window.clearTimeout(settleTimer.current)
+    settleTimer.current = window.setTimeout(() => {
+      const track = trackRef.current
+      if (!track || touching.current || track.clientWidth === 0) return
+      const index = target.current ?? Math.round(track.scrollLeft / track.clientWidth)
+      if (Math.abs(track.scrollLeft - index * track.clientWidth) > 1) scrollToPhoto(index)
+    }, 150)
+  }
+
+  const onScroll = () => {
+    const track = trackRef.current
+    if (!track || track.clientWidth === 0) return
+    if (target.current !== null) {
+      if (Math.abs(track.scrollLeft - target.current * track.clientWidth) <= 1) target.current = null
+    } else {
+      const index = Math.round(track.scrollLeft / track.clientWidth)
+      if (index !== active && index >= 0 && index < images.length) onActive(index)
+    }
+    settle()
+  }
+
+  const goTo = (index: number) => {
+    target.current = index
+    onActive(index)
+    scrollToPhoto(index)
+  }
+
+  const startTouch = () => {
+    touching.current = true
+    target.current = null // the finger takes over from any dot/arrow animation
+  }
+
+  return (
+    <>
+      <div
+        ref={trackRef}
+        // A scrollable region must be reachable by keyboard; arrows change photo.
+        tabIndex={0}
+        role="region"
+        aria-roledescription="carrossel"
+        aria-label={`Fotos de ${nft.name}`}
+        onKeyDown={(event) => {
+          const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+          if (!step) return
+          event.preventDefault()
+          const from = target.current ?? active
+          goTo(Math.min(images.length - 1, Math.max(0, from + step)))
+        }}
+        onScroll={onScroll}
+        onTouchStart={startTouch}
+        onTouchEnd={() => {
+          touching.current = false
+          settle()
+        }}
+        onTouchCancel={() => {
+          touching.current = false
+          settle()
+        }}
+        className="mt-2 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-[24px] outline-none focus-visible:ring-2 focus-visible:ring-highlight focus-visible:ring-offset-2 focus-visible:ring-offset-background [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {images.map((src, i) => (
+          <div key={src} className="w-full shrink-0 snap-center snap-always">
+            <NftImage
+              src={src}
+              alt={i === 0 ? nft.name : `${nft.name}, imagem ${i + 1} de ${images.length}`}
+              sizes="calc(100vw - 56px)"
+              priority={i === 0}
+              media="mobile"
+              // Only the visible photo takes part in the shared artwork transition.
+              className={cn('aspect-auto h-[356px] rounded-[24px]', i === active && 'vt-hero')}
+            />
+          </div>
+        ))}
+      </div>
+      {images.length > 1 && (
+        <div
+          className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center"
+          role="group"
+          aria-label="Galeria"
+        >
+          {images.map((src, i) => (
+            <button
+              key={src}
+              type="button"
+              aria-label={`Imagem ${i + 1} de ${images.length}`}
+              aria-pressed={i === active}
+              onClick={() => goTo(i)}
+              // 24px hit area around the 7px dot (WCAG 2.5.8 target size).
+              className="flex h-6 min-w-6 items-center justify-center"
+            >
+              <span
+                className={cn(
+                  'block h-[7px] rounded-full bg-primary transition-[width] duration-300',
+                  i === active ? 'w-7' : 'w-[7px]',
+                )}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
 /** Desktop gallery: 100px thumbnails + 444px framed main image (Figma "Product Images"). */
 function Gallery({
   nft,
@@ -466,38 +606,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
               />
             </button>
           </div>
-          <NftImage
-            src={nft.images[activeImage] ?? nft.imageUrl}
-            alt={nft.name}
-            sizes="calc(100vw - 56px)"
-            priority
-            media="mobile"
-            className="vt-hero mt-2 aspect-auto h-[356px] rounded-[24px]"
-          />
-          <div
-            className="absolute bottom-[52px] left-1/2 flex -translate-x-1/2 items-center"
-            role="group"
-            aria-label="Galeria"
-          >
-            {nft.images.map((src, i) => (
-              <button
-                key={src}
-                type="button"
-                aria-label={`Imagem ${i + 1} de ${nft.images.length}`}
-                aria-pressed={i === activeImage}
-                onClick={() => setActiveImage(i)}
-                // 24px hit area around the 7px dot (WCAG 2.5.8 target size).
-                className="flex h-6 min-w-6 items-center justify-center"
-              >
-                <span
-                  className={cn(
-                    'block h-[7px] rounded-full bg-primary',
-                    i === activeImage ? 'w-7' : 'w-[7px]',
-                  )}
-                />
-              </button>
-            ))}
-          </div>
+          <MobileGallery nft={nft} active={activeImage} onActive={setActiveImage} />
         </div>
         <section
           aria-labelledby="nft-title-mobile"

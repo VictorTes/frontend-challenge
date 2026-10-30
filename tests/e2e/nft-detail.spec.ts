@@ -46,6 +46,40 @@ test.describe('Detalhe do NFT', () => {
     await expect(stepper.locator('output')).toHaveText('4')
   })
 
+  test('mobile: arrastar a foto troca de imagem e as setas do teclado também @mobile', async ({ page, open }) => {
+    await open(`/nfts/${NFT.emerald.id}`)
+    test.skip(!isMobile(page), 'Swipe gallery is the phone layout')
+    const gallery = page.getByRole('region', { name: `Fotos de ${NFT.emerald.name}` })
+    const dot = (n: number) => page.getByRole('button', { name: `Imagem ${n} de 4` }).filter({ visible: true })
+    await expect(dot(1)).toHaveAttribute('aria-pressed', 'true')
+    // A real touch drag (CDP), not a programmatic scroll.
+    const box = (await gallery.boundingBox())!
+    const y = box.y + box.height / 2
+    const cdp = await page.context().newCDPSession(page)
+    const drag = async (from: number, to: number) => {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: from, y }] })
+      for (let i = 1; i <= 10; i++) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: from + ((to - from) * i) / 10, y }] })
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    }
+    await drag(box.x + box.width - 20, box.x + 20)
+    await expect(dot(2)).toHaveAttribute('aria-pressed', 'true')
+    // A short drag settles back on a whole photo instead of resting between two.
+    await drag(box.x + box.width - 20, box.x + box.width - 120)
+    await expect
+      .poll(() => gallery.evaluate((el) => el.scrollLeft % el.clientWidth))
+      .toBe(0)
+    await expect(dot(2)).toHaveAttribute('aria-pressed', 'true')
+
+    await gallery.focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(dot(3)).toHaveAttribute('aria-pressed', 'true')
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('ArrowLeft')
+    await expect(dot(1)).toHaveAttribute('aria-pressed', 'true')
+  })
+
   test('mobile: "Ver mais detalhes" mostra abas, compartilhar e relacionados como no desktop @mobile', async ({ page, open }) => {
     await open(`/nfts/${NFT.emerald.id}`)
     test.skip(!isMobile(page), 'Desktop already shows everything')
