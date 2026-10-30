@@ -95,7 +95,7 @@ function Newsletter() {
   return (
     <form
       onSubmit={submit}
-      className="flex flex-col gap-3 px-4 lg:min-w-0 lg:flex-[1.35] xl:w-[357px] xl:flex-none"
+      className="flex flex-col gap-3 lg:min-w-0 lg:flex-[1.35] lg:px-4 xl:w-[357px] xl:flex-none"
     >
       <h2 className="text-lg leading-4 font-bold">Antecipe-se ao próximo lançamento</h2>
       <div className="mt-1 flex h-10 overflow-hidden rounded-[6px] bg-band">
@@ -128,26 +128,30 @@ export function Footer() {
   return (
     <footer className="container-page mt-24 mb-28 md:mb-6">
       {/* Features + newsletter (Figma: 1200×250, padding 32) */}
-      <div className="flex flex-col gap-7 bg-card p-8 lg:min-h-[250px] lg:flex-row lg:gap-0">
+      {/* Below lg (no frame): icon beside the text and dividers between items,
+          so the three features read as a compact list instead of a tall column. */}
+      <div className="flex flex-col gap-6 bg-card p-6 sm:p-8 lg:min-h-[250px] lg:flex-row lg:gap-0">
         {FEATURES.map((f) => (
           <div
             key={f.letter}
-            className="flex flex-col gap-3 px-4 lg:min-w-0 lg:flex-1 lg:border-r lg:border-primary xl:w-[265px] xl:flex-none"
+            className="flex items-start gap-4 border-b border-primary/25 pb-6 lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-3 lg:border-r lg:border-b-0 lg:border-primary lg:px-4 lg:pb-0 xl:w-[265px] xl:flex-none"
           >
             <span
               aria-hidden
-              className="flex size-[74px] items-center justify-center rounded-full bg-primary text-2xl leading-8 font-bold text-primary-foreground"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-8 font-bold text-primary-foreground lg:size-[74px] lg:text-2xl"
             >
               {f.letter}
             </span>
-            <h2 className="text-[17px] leading-4 font-bold">{f.title}</h2>
-            <p className="max-w-[204px] text-sm leading-[22px] text-muted-foreground">{f.text}</p>
+            <div className="flex flex-col gap-2 lg:gap-3">
+              <h2 className="text-base leading-5 font-bold lg:text-[17px] lg:leading-4">{f.title}</h2>
+              <p className="text-sm leading-[22px] text-muted-foreground lg:max-w-[204px]">{f.text}</p>
+            </div>
           </div>
         ))}
         <Newsletter />
       </div>
       {/* Contact band (Figma: 88px, #38220f) */}
-      <div className="grid gap-4 bg-band p-8 text-sm leading-[22px] sm:grid-cols-2 lg:items-center xl:grid-cols-[211px_230px_211px_1fr] xl:gap-[81px]">
+      <div className="grid gap-2 bg-band p-6 text-sm leading-[22px] sm:grid-cols-2 sm:gap-4 sm:p-8 lg:items-center xl:grid-cols-[211px_230px_211px_1fr] xl:gap-[81px]">
         <span className="font-bold tracking-[0.1em]">KURIO</span>
         <span className="lg:whitespace-pre-line">
           {'Feito para colecionadores,\ncriadores e cultura'}
@@ -156,11 +160,11 @@ export function Footer() {
         <span>+55 11 4002 8922</span>
       </div>
       {/* Link columns (Figma: 236px, gap 124) */}
-      <div className="grid gap-8 bg-card p-8 sm:grid-cols-2 lg:grid-cols-[179px_179px_179px_228px] lg:justify-between lg:gap-0">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-8 bg-card p-6 sm:p-8 lg:grid-cols-[179px_179px_179px_228px] lg:justify-between lg:gap-0">
         {COLUMNS.map((col) => (
           <nav key={col.title} aria-label={col.title} className="flex flex-col gap-2">
-            <h2 className="text-lg leading-4 font-bold">{col.title}</h2>
-            <ul className="text-sm leading-[30px]">
+            <h2 className="text-base leading-5 font-bold lg:text-lg lg:leading-4">{col.title}</h2>
+            <ul className="flex flex-col gap-2.5 text-sm leading-5 lg:block lg:leading-[30px]">
               {col.links.map((link) => (
                 <li key={typeof link === 'string' ? link : link.label}>
                   {typeof link === 'string' ? (
@@ -190,7 +194,7 @@ export function Footer() {
             </ul>
           </nav>
         ))}
-        <div className="flex flex-col gap-8">
+        <div className="col-span-2 flex flex-col gap-8 lg:col-span-1">
           <div className="flex flex-col gap-5">
             <h2 className="text-lg leading-4 font-bold">Redes sociais</h2>
             <ul className="flex gap-[10px]">
