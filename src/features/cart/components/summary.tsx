@@ -52,15 +52,17 @@ export function QuoteTotals({
         </dd>
       </div>
       <div className="flex items-center justify-between gap-4">
-        <dt className="min-w-0 sm:whitespace-nowrap">
+        {/* The label may wrap and the coupon goes on its own line: in narrow
+            summary columns they would otherwise run under the amount. */}
+        <dt className="min-w-0 flex-1">
           Desconto do lançamento
           {quote.coupon && (
-            <span className="ml-1 text-xs text-highlight">
-              ({quote.coupon.code} −{quote.coupon.percentOff}%)
+            <span className="mt-1 block text-xs leading-4 text-highlight">
+              {quote.coupon.code} −{quote.coupon.percentOff}%
             </span>
           )}
         </dt>
-        <dd className="whitespace-nowrap" data-testid="quote-discount">
+        <dd className="shrink-0 whitespace-nowrap" data-testid="quote-discount">
           (-) {formatEth(quote.discountEth)}
         </dd>
       </div>
