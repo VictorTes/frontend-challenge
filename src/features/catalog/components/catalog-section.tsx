@@ -282,7 +282,7 @@ export function CatalogSection({
                 aria-busy={isFetching}
                 className={cn(
                   // Mobile layout staggers the second column (masonry look).
-                  'grid grid-cols-2 gap-x-4 gap-y-6 transition-opacity max-sm:[&>*:nth-child(even)]:mt-8 sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]',
+                  'grid grid-cols-2 gap-x-4 gap-y-6 transition-opacity sm:grid-cols-3 md:gap-x-8 md:gap-y-[72px]',
                   isPlaceholderData && 'opacity-60',
                 )}
               >

@@ -50,7 +50,6 @@ export function Hero() {
   const [index, setIndex] = useState(0)
   const items = data?.items ?? []
   const current: NftSummary | undefined = items[index % Math.max(items.length, 1)]
-  const secondary: NftSummary | undefined = items[(index + 1) % Math.max(items.length, 1)]
 
   return (
     <section aria-labelledby="hero-title" className="container-page pt-[22px] md:pt-8">
@@ -76,7 +75,7 @@ export function Hero() {
             EXPLORAR <ArrowRight aria-hidden className="size-4" />
           </a>
         </div>
-        <div className="relative z-10 ml-auto w-[42%] py-2.5 pr-3">
+        <div className="relative z-10 ml-auto flex w-[42%] items-center py-2.5 pr-3">
           {current && (
             <NftImage
               src={current.imageUrl}
@@ -85,15 +84,6 @@ export function Hero() {
               priority
               media="mobile"
               className="rounded-[16px]"
-            />
-          )}
-          {secondary && (
-            <NftImage
-              src={secondary.imageUrl}
-              alt=""
-              sizes="60px"
-              media="mobile"
-              className="absolute bottom-3 left-0 w-[58px] rounded-[10px] border-2 border-card"
             />
           )}
         </div>
