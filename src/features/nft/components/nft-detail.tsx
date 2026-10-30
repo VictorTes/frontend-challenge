@@ -676,7 +676,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
                   type="button"
                   onClick={() => exclusive(() => add(true))}
                   disabled={buyDisabled}
-                  className="h-10 max-w-[130px] min-w-0 flex-1 rounded-[6px] bg-primary text-sm leading-5 font-bold text-primary-foreground hover:bg-highlight disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-10 w-[130px] shrink-0 rounded-[6px] bg-primary px-3 whitespace-nowrap text-sm leading-5 font-bold text-primary-foreground hover:bg-highlight disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {soldOut
                     ? 'ESGOTADO'
@@ -690,7 +690,7 @@ export function NftDetailPage({ nftId }: { nftId: string }) {
                   type="button"
                   aria-pressed={isFavorite}
                   onClick={favorite}
-                  className="flex h-10 max-w-[130px] min-w-0 flex-1 items-center justify-center gap-2 rounded-[6px] border border-primary text-sm leading-5 font-medium text-highlight hover:bg-primary/10"
+                  className="flex h-10 w-[130px] shrink-0 items-center justify-center gap-2 rounded-[6px] border border-primary px-3 text-sm leading-5 font-medium whitespace-nowrap text-highlight hover:bg-primary/10"
                 >
                   <Heart aria-hidden className={cn('size-5', isFavorite && 'fill-highlight')} />
                   {isFavorite ? 'Favoritado' : 'Favoritar'}
